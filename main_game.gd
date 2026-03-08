@@ -35,6 +35,13 @@ func _ready():
 func _process(delta):
 	$Camera2D/in_game_menu/money.text = str(GlobalVariables.player_money)
 	$Camera2D/in_game_menu/exp.text   = str(GlobalVariables.player_exp)
+
+	if MultiplayerManager.is_multiplayer_game and OS.has_feature("web"):
+		var should_surrender = JavaScriptBridge.eval("window._aowSurrender === true")
+		if should_surrender:
+			JavaScriptBridge.eval("window._aowSurrender = false")
+			_handle_surrender()
+
 	if medival_special_active == true:
 		if $medival_special_timer.is_stopped() == true:
 			$medival_special_timer.start(5.0)
@@ -174,6 +181,11 @@ func _on_enemy_turret_received(action: String, slot: int, turret_name: String, _
 			$enemy_base.remote_sell_turret(slot)
 		"add_slot":
 			$enemy_base.remote_add_turret_spot()
+
+func _handle_surrender():
+	MultiplayerManager.send_surrender()
+	MusicManager.audioStreamPlayer.stop()
+	get_tree().change_scene_to_file("res://scenes/game_over.tscn")
 
 func _on_opponent_disconnected():
 	# Show a message — the base will eventually be destroyed or they can return

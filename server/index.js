@@ -153,6 +153,9 @@ function handleMessage(ws, msg) {
     case "get_lobbies":
       send(ws, { type: "lobby_list", lobbies: lobbySnapshot() });
       break;
+    case "surrender":
+      handleSurrender(ws);
+      break;
     case "spawn":
     case "special":
     case "age_advance":
@@ -241,6 +244,27 @@ function handleJoin(ws, lobbyId, preferredRole) {
     updateStatus(lobby);
   }
 
+  broadcastAll({ type: "lobby_list", lobbies: lobbySnapshot() });
+}
+
+// ── Surrender ────────────────────────────────────────────────────────────────
+
+function handleSurrender(ws) {
+  if (!ws.lobby || ws.role === "spectator") return;
+
+  const lobby = ws.lobby;
+  const winnerNum = ws.playerNum === 1 ? 2 : 1;
+  const gameOverMsg = { type: "game_over", winner: winnerNum, surrender: true };
+
+  broadcast(lobby, gameOverMsg);
+  send(ws, gameOverMsg);
+
+  systemChat(`${ws.playerName} surrendered in ${lobby.name}!`);
+  console.log(`${lobby.name}: player${ws.playerNum} surrendered → winner: player${winnerNum}`);
+
+  lobby.eventLog = [];
+  for (const p of [...lobby.players]) removeFromLobby(p);
+  for (const s of [...lobby.spectators]) removeFromLobby(s);
   broadcastAll({ type: "lobby_list", lobbies: lobbySnapshot() });
 }
 

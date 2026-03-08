@@ -175,6 +175,9 @@ func send_turret_action(action: String, slot: int, turret_name: String = ""):
 func send_game_over(winner_player_num: int):
 	_send({ "type": "game_over", "winner": winner_player_num })
 
+func send_surrender():
+	_send({ "type": "surrender" })
+
 func disconnect_from_server():
 	ws.close()
 	connected = false
