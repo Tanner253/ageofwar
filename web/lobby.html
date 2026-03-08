@@ -10,124 +10,137 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0c0804;
-      --bg-card: rgba(18, 12, 6, 0.92);
-      --bg-card-hover: rgba(30, 20, 10, 0.95);
+      --bg: #0a0704;
+      --card: rgba(14, 10, 5, 0.88);
+      --card-hover: rgba(22, 16, 8, 0.94);
       --gold: #ffd050;
       --gold-dim: #b88a30;
       --orange: #d4822a;
       --orange-bright: #f09030;
       --red: #c04030;
       --red-glow: #ff5040;
-      --green: #40c070;
-      --green-dim: #2a7a48;
+      --green: #3cc868;
       --yellow: #e0b840;
-      --text: #e8d0a0;
-      --text-dim: #8a6a40;
-      --border: #3a2510;
+      --text: #dcc898;
+      --text-dim: #7a5e38;
+      --border: #2e1c0c;
+      --border-light: rgba(180, 120, 40, 0.15);
       --radius: 8px;
     }
 
-    html { height: 100%; }
+    html, body { height: 100%; }
     body {
       background: var(--bg);
       color: var(--text);
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      min-height: 100%;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
     }
 
-    /* ── Background ───────────────────────────────────────── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(ellipse at 20% 0%, rgba(180, 100, 20, 0.08) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 100%, rgba(120, 60, 10, 0.06) 0%, transparent 60%),
-        linear-gradient(180deg, #120a04 0%, #0c0804 40%, #0a0604 100%);
-      z-index: -1;
-    }
-
-    /* ── Header ───────────────────────────────────────────── */
-    .header {
-      text-align: center;
-      padding: 24px 16px 18px;
-      background: linear-gradient(180deg, rgba(30, 16, 4, 0.95) 0%, transparent 100%);
-      border-bottom: 1px solid rgba(90, 50, 10, 0.3);
+    /* ── Hero ─────────────────────────────────────────────── */
+    .hero {
       position: relative;
+      width: 100%;
+      aspect-ratio: 1024 / 576;
+      max-height: 50vh;
+      overflow: hidden;
+      flex-shrink: 0;
     }
-    .header h1 {
-      font-family: Georgia, 'Times New Roman', serif;
-      font-size: clamp(1.8rem, 4.5vw, 2.8rem);
-      color: var(--gold);
-      text-shadow: 0 0 40px rgba(255, 160, 40, 0.25), 0 2px 0 #4a1800;
-      letter-spacing: 5px;
-      font-weight: 700;
+    .hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 40%;
+      display: block;
     }
-    .header .sub {
-      font-size: 0.75rem;
-      color: var(--gold-dim);
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      margin-top: 2px;
-      font-weight: 600;
-    }
-    .hdr-status {
+    .hero-fade {
       position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 60%;
+      background: linear-gradient(to top, var(--bg) 0%, rgba(10, 7, 4, 0.7) 40%, transparent 100%);
+      pointer-events: none;
+    }
+    .hero-top {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 40%;
+      background: linear-gradient(to bottom, rgba(10, 7, 4, 0.3) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .hero-meta {
+      position: absolute;
+      top: 12px;
       right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 0.8rem;
+      gap: 10px;
+      z-index: 2;
     }
     .online-pill {
       display: flex;
       align-items: center;
       gap: 5px;
-      background: rgba(40, 180, 100, 0.12);
-      border: 1px solid rgba(40, 180, 100, 0.25);
-      padding: 4px 10px;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(60, 200, 104, 0.3);
+      padding: 5px 12px;
       border-radius: 20px;
       color: var(--green);
       font-weight: 600;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
     }
     .online-dot {
-      width: 7px; height: 7px;
+      width: 6px; height: 6px;
       background: var(--green);
       border-radius: 50%;
       animation: blink 2s infinite;
     }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
     #connStatus {
-      color: var(--text-dim);
-      font-size: 0.75rem;
+      color: rgba(220, 200, 152, 0.7);
+      font-size: 0.7rem;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px 10px;
+      border-radius: 12px;
+      backdrop-filter: blur(6px);
     }
 
-    /* ── Layout ───────────────────────────────────────────── */
-    .main {
+    .hero-cta {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      text-align: center;
+    }
+    .hero-subtitle {
+      font-size: 0.75rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+      font-weight: 600;
+    }
+
+    /* ── Content ──────────────────────────────────────────── */
+    .content {
       flex: 1;
       display: grid;
-      grid-template-columns: 1fr 300px;
-      gap: 20px;
-      max-width: 1100px;
+      grid-template-columns: 1fr 280px;
+      gap: 16px;
+      max-width: 1060px;
       width: 100%;
       margin: 0 auto;
-      padding: 20px 16px;
+      padding: 16px;
     }
 
-    /* ── Section titles ───────────────────────────────────── */
     .sec-title {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: var(--text-dim);
       letter-spacing: 3px;
       text-transform: uppercase;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -137,32 +150,31 @@
       content: '';
       flex: 1;
       height: 1px;
-      background: linear-gradient(90deg, rgba(90, 50, 10, 0.4), transparent);
+      background: linear-gradient(90deg, var(--border-light), transparent);
     }
 
     /* ── Arena cards ──────────────────────────────────────── */
     .arenas {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
     }
     .arena {
-      background: var(--bg-card);
+      background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 16px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       transition: all 0.2s;
       position: relative;
-      overflow: hidden;
     }
     .arena:hover {
-      border-color: rgba(180, 100, 30, 0.4);
-      background: var(--bg-card-hover);
+      border-color: rgba(180, 120, 40, 0.3);
+      background: var(--card-hover);
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     }
     .arena-top {
       display: flex;
@@ -171,34 +183,31 @@
     }
     .arena-name {
       font-family: Georgia, serif;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 700;
       color: var(--gold);
     }
-
-    /* Status badges */
     .badge {
-      font-size: 0.6rem;
-      padding: 2px 8px;
+      font-size: 0.55rem;
+      padding: 2px 7px;
       border-radius: 4px;
       font-weight: 700;
       letter-spacing: 1.5px;
       text-transform: uppercase;
     }
-    .badge-open { background: rgba(40, 180, 100, 0.12); color: var(--green); border: 1px solid rgba(40, 180, 100, 0.3); }
-    .badge-waiting { background: rgba(224, 184, 64, 0.12); color: var(--yellow); border: 1px solid rgba(224, 184, 64, 0.3); animation: blink 2s infinite; }
+    .badge-open { background: rgba(60, 200, 104, 0.1); color: var(--green); border: 1px solid rgba(60, 200, 104, 0.25); }
+    .badge-waiting { background: rgba(224, 184, 64, 0.1); color: var(--yellow); border: 1px solid rgba(224, 184, 64, 0.25); animation: blink 2s infinite; }
     .badge-live {
-      background: rgba(255, 60, 40, 0.15);
+      background: rgba(255, 60, 40, 0.12);
       color: var(--red-glow);
-      border: 1px solid rgba(255, 60, 40, 0.35);
+      border: 1px solid rgba(255, 60, 40, 0.3);
+      padding-left: 14px;
       position: relative;
-      padding-left: 16px;
     }
     .badge-live::before {
       content: '';
       position: absolute;
-      left: 6px;
-      top: 50%;
+      left: 5px; top: 50%;
       transform: translateY(-50%);
       width: 5px; height: 5px;
       background: var(--red-glow);
@@ -206,105 +215,92 @@
       animation: blink 1s infinite;
     }
 
-    /* Arena info */
-    .arena-info {
-      font-size: 0.78rem;
-      color: var(--text-dim);
-    }
+    .arena-info { font-size: 0.74rem; color: var(--text-dim); }
     .arena-info strong { color: var(--text); }
     .arena-versus {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       color: var(--orange);
       font-weight: 600;
       text-align: center;
-      padding: 6px 0;
-      border-top: 1px solid rgba(90, 50, 10, 0.2);
-      border-bottom: 1px solid rgba(90, 50, 10, 0.2);
+      padding: 5px 0;
+      border-top: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border-light);
     }
-    .arena-versus .vs { color: var(--red); font-weight: 800; margin: 0 4px; }
-    .arena-spectators {
-      font-size: 0.7rem;
-      color: var(--text-dim);
-    }
+    .arena-versus .vs { color: var(--red); font-weight: 800; margin: 0 3px; }
+    .arena-spectators { font-size: 0.66rem; color: var(--text-dim); }
 
-    /* Arena buttons */
-    .arena-btns { display: flex; gap: 6px; margin-top: auto; }
+    .arena-btns { display: flex; gap: 5px; margin-top: auto; }
     .btn {
       flex: 1;
       padding: 8px 0;
       border: none;
       border-radius: 6px;
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       font-weight: 700;
       cursor: pointer;
       letter-spacing: 0.5px;
       transition: all 0.15s;
       font-family: inherit;
       text-transform: uppercase;
+      -webkit-tap-highlight-color: transparent;
     }
     .btn:active:not(:disabled) { transform: scale(0.97); }
-    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
+    .btn:disabled { opacity: 0.25; cursor: not-allowed; }
     .btn-play {
-      background: linear-gradient(135deg, #c07020, #e09030);
+      background: linear-gradient(135deg, #b06818, #d88428);
       color: #fff;
-      box-shadow: 0 2px 8px rgba(192, 112, 32, 0.3);
+      box-shadow: 0 2px 8px rgba(176, 104, 24, 0.25);
     }
-    .btn-play:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(192, 112, 32, 0.5); }
-
+    .btn-play:hover:not(:disabled) { box-shadow: 0 4px 14px rgba(176, 104, 24, 0.45); }
     .btn-watch {
-      background: rgba(200, 60, 40, 0.15);
+      background: rgba(255, 60, 40, 0.1);
       color: var(--red-glow);
-      border: 1px solid rgba(200, 60, 40, 0.3);
+      border: 1px solid rgba(255, 60, 40, 0.25);
     }
     .btn-watch:hover:not(:disabled) {
-      background: rgba(200, 60, 40, 0.25);
-      box-shadow: 0 4px 16px rgba(200, 60, 40, 0.3);
+      background: rgba(255, 60, 40, 0.2);
+      box-shadow: 0 4px 14px rgba(255, 60, 40, 0.2);
     }
     .btn-watch.pulse { animation: watchPulse 2s infinite; }
     @keyframes watchPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 60, 40, 0); }
-      50% { box-shadow: 0 0 12px 2px rgba(255, 60, 40, 0.2); }
+      0%, 100% { box-shadow: 0 0 0 0 transparent; }
+      50% { box-shadow: 0 0 10px 2px rgba(255, 60, 40, 0.15); }
     }
 
-    /* ── Chat panel ──────────────────────────────────────── */
-    .chat-col {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
+    /* ── Chat ────────────────────────────────────────────── */
+    .chat-col { display: flex; flex-direction: column; min-height: 0; }
     .chat-box {
       flex: 1;
-      background: rgba(10, 6, 2, 0.9);
+      background: rgba(8, 5, 2, 0.92);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      min-height: 380px;
-      max-height: 60vh;
+      min-height: 320px;
+      max-height: 55vh;
     }
     .chat-msgs {
       flex: 1;
       overflow-y: auto;
-      padding: 10px;
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      font-size: 0.8rem;
+      gap: 3px;
+      font-size: 0.78rem;
       scrollbar-width: thin;
-      scrollbar-color: rgba(90, 50, 10, 0.3) transparent;
+      scrollbar-color: rgba(80, 50, 20, 0.3) transparent;
     }
-    .msg { line-height: 1.4; animation: fadeUp 0.15s ease; }
+    .msg { line-height: 1.35; animation: fadeUp 0.15s ease; }
     .msg .n { font-weight: 700; color: var(--orange); }
     .msg .t { color: var(--text); }
-    .msg.sys { color: var(--text-dim); font-style: italic; font-size: 0.74rem; }
+    .msg.sys { color: var(--text-dim); font-style: italic; font-size: 0.7rem; }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(3px); } }
 
     .chat-input {
       display: flex;
       border-top: 1px solid var(--border);
-      background: rgba(8, 4, 2, 0.95);
+      background: rgba(6, 3, 1, 0.95);
     }
     .chat-input input {
       flex: 1;
@@ -312,8 +308,8 @@
       border: none;
       color: var(--text);
       font-family: inherit;
-      font-size: 0.8rem;
-      padding: 10px;
+      font-size: 0.78rem;
+      padding: 9px 10px;
       outline: none;
     }
     .chat-input input::placeholder { color: var(--text-dim); }
@@ -321,10 +317,9 @@
       background: var(--orange);
       color: #fff;
       border: none;
-      border-radius: 0;
-      padding: 10px 14px;
+      padding: 9px 12px;
       font-family: inherit;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 700;
       cursor: pointer;
     }
@@ -334,25 +329,25 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-top: 10px;
-      font-size: 0.8rem;
+      margin-top: 8px;
+      font-size: 0.75rem;
     }
-    .name-row label { color: var(--text-dim); white-space: nowrap; font-size: 0.75rem; }
+    .name-row label { color: var(--text-dim); white-space: nowrap; font-size: 0.7rem; }
     .name-row input {
       flex: 1;
-      background: rgba(10, 6, 2, 0.9);
+      background: rgba(8, 5, 2, 0.92);
       border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--gold);
       font-family: inherit;
-      font-size: 0.8rem;
-      padding: 6px 8px;
+      font-size: 0.78rem;
+      padding: 5px 8px;
       outline: none;
     }
     .name-row input:focus { border-color: var(--orange); }
     .name-row button {
-      padding: 6px 10px;
-      font-size: 0.72rem;
+      padding: 5px 10px;
+      font-size: 0.68rem;
       background: var(--border);
       color: var(--text);
       border: none;
@@ -365,10 +360,9 @@
     /* ── Footer ──────────────────────────────────────────── */
     .footer {
       text-align: center;
-      padding: 14px;
-      border-top: 1px solid rgba(90, 50, 10, 0.2);
+      padding: 12px;
       color: var(--text-dim);
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       line-height: 1.5;
     }
     .footer a { color: var(--gold-dim); text-decoration: none; }
@@ -377,19 +371,21 @@
     /* ── Name modal ─────────────────────────────────────── */
     .modal-bg {
       position: fixed; inset: 0;
-      background: rgba(0, 0, 0, 0.88);
+      background: rgba(0, 0, 0, 0.85);
       display: flex; align-items: center; justify-content: center;
       z-index: 200;
+      backdrop-filter: blur(4px);
     }
     .modal-bg.hidden { display: none; }
     .modal {
-      background: linear-gradient(160deg, #1e1208, #140c04);
+      background: linear-gradient(160deg, #1a1006, #100a04);
       border: 1px solid var(--gold-dim);
       border-radius: 12px;
       padding: 28px 24px;
       text-align: center;
       max-width: 340px;
       width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
     }
     .modal h2 {
       font-family: Georgia, serif;
@@ -413,7 +409,7 @@
     }
     .modal input:focus { border-color: var(--orange); }
     .modal button {
-      background: linear-gradient(135deg, #c07020, #e09030);
+      background: linear-gradient(135deg, #b06818, #d88428);
       color: #fff;
       padding: 10px 28px;
       font-size: 0.95rem;
@@ -426,36 +422,25 @@
 
     /* ── Tablet ──────────────────────────────────────────── */
     @media (max-width: 900px) {
-      .main {
-        grid-template-columns: 1fr;
-        padding: 12px;
-        gap: 16px;
-      }
-      .hdr-status {
-        position: static;
-        transform: none;
-        justify-content: center;
-        margin-top: 10px;
-      }
-      .header { padding: 16px 12px 14px; }
-      .arenas { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .chat-col { border-top: 1px solid rgba(90, 50, 10, 0.2); padding-top: 16px; }
-      .chat-box { min-height: 220px; max-height: 35vh; }
-      .btn { padding: 10px 0; font-size: 0.82rem; -webkit-tap-highlight-color: transparent; }
+      .content { grid-template-columns: 1fr; padding: 12px; gap: 14px; }
+      .hero { max-height: 40vh; }
+      .arenas { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .chat-col { border-top: 1px solid var(--border-light); padding-top: 14px; }
+      .chat-box { min-height: 200px; max-height: 30vh; }
+      .btn { padding: 10px 0; font-size: 0.8rem; }
     }
 
     /* ── Phone ───────────────────────────────────────────── */
     @media (max-width: 520px) {
+      .hero { max-height: 35vh; }
+      .hero img { object-position: center 35%; }
+      .hero-meta { top: 8px; right: 8px; gap: 6px; }
+      .online-pill { font-size: 0.68rem; padding: 4px 8px; }
+      #connStatus { font-size: 0.62rem; padding: 3px 8px; }
       .arenas { grid-template-columns: 1fr; }
-      .header h1 { letter-spacing: 3px; font-size: 1.6rem; }
-      .header .sub { letter-spacing: 2px; font-size: 0.65rem; }
-      .arena { padding: 14px; flex-direction: row; flex-wrap: wrap; align-items: center; }
-      .arena-top { flex: 1; min-width: 60%; }
-      .arena-info { font-size: 0.72rem; }
-      .arena-btns { width: 100%; }
-      .btn { padding: 11px 0; font-size: 0.85rem; }
+      .arena { padding: 12px; }
+      .btn { padding: 11px 0; font-size: 0.82rem; }
       .chat-input input { font-size: 16px; }
-      .modal { padding: 24px 18px; }
       .modal input { font-size: 16px; }
     }
   </style>
@@ -472,19 +457,25 @@
     </div>
   </div>
 
-  <header class="header">
-    <h1>AGE OF WAR</h1>
-    <p class="sub">Multiplayer Arena</p>
-    <div class="hdr-status">
+  <!-- Hero -->
+  <div class="hero">
+    <img src="hero-bg.png" alt="Age of War" />
+    <div class="hero-top"></div>
+    <div class="hero-fade"></div>
+    <div class="hero-meta">
       <div class="online-pill">
         <span class="online-dot"></span>
         <span id="onlineCount">--</span> online
       </div>
       <span id="connStatus">Connecting...</span>
     </div>
-  </header>
+    <div class="hero-cta">
+      <div class="hero-subtitle">Multiplayer Arena</div>
+    </div>
+  </div>
 
-  <main class="main">
+  <!-- Content -->
+  <main class="content">
     <section>
       <div class="sec-title">Battle Arenas</div>
       <div class="arenas" id="arenas"></div>
@@ -554,7 +545,7 @@
 
       ws.onopen = () => {
         document.getElementById("connStatus").textContent = "Connected";
-        document.getElementById("connStatus").style.color = "#40c070";
+        document.getElementById("connStatus").style.color = "#3cc868";
         if (playerName) ws.send(JSON.stringify({ type: "set_name", name: playerName }));
         ws.send(JSON.stringify({ type: "get_lobbies" }));
       };
@@ -588,7 +579,6 @@
       for (const l of lobbies) {
         const isLive = l.status === "playing";
         const isWaiting = l.status === "waiting";
-        const isEmpty = l.status === "empty";
 
         let badgeHtml, badgeCls;
         if (isLive) { badgeHtml = "LIVE"; badgeCls = "badge-live"; }
@@ -629,8 +619,7 @@
 
     function joinLobby(id, role) {
       const sp = window.GAME_CONFIG.SERVER_URL
-        ? "&server=" + encodeURIComponent(window.GAME_CONFIG.WS_URL)
-        : "";
+        ? "&server=" + encodeURIComponent(window.GAME_CONFIG.WS_URL) : "";
       const np = playerName ? "&name=" + encodeURIComponent(playerName) : "";
       window.location.href = `/game.html?lobby=${id}&role=${role}${sp}${np}`;
     }
