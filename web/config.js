@@ -7,7 +7,7 @@
  *             Then redeploy the Vercel frontend.
  */
 window.GAME_CONFIG = {
-  SERVER_URL: null,
+  SERVER_URL: "https://age-of-war-30rg.onrender.com",
 };
 
 /**

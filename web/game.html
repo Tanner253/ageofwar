@@ -92,7 +92,96 @@ body {
 		</style>
 		<link id="-gd-engine-icon" rel="icon" type="image/png" href="age-of-war.icon.png" />
 <link rel="apple-touch-icon" href="age-of-war.apple-touch-icon.png"/>
-
+<style>
+#chat-overlay {
+	position: fixed;
+	bottom: 12px;
+	right: 12px;
+	width: 320px;
+	max-height: 350px;
+	display: flex;
+	flex-direction: column;
+	background: rgba(15, 10, 4, 0.85);
+	border: 1px solid rgba(192, 112, 32, 0.4);
+	border-radius: 10px;
+	font-family: Georgia, "Times New Roman", serif;
+	z-index: 9999;
+	backdrop-filter: blur(4px);
+	overflow: hidden;
+	transition: opacity 0.3s, transform 0.3s;
+}
+#chat-overlay.collapsed {
+	max-height: 36px;
+}
+#chat-overlay.collapsed #chat-body { display: none; }
+#chat-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 12px;
+	background: rgba(42, 24, 8, 0.9);
+	cursor: pointer;
+	user-select: none;
+	border-bottom: 1px solid rgba(192, 112, 32, 0.2);
+	font-size: 0.8rem;
+	color: #ffd050;
+	letter-spacing: 1.5px;
+}
+#chat-header:hover { background: rgba(58, 32, 12, 0.9); }
+#chat-toggle-icon { font-size: 1rem; }
+#chat-messages-game {
+	flex: 1;
+	overflow-y: auto;
+	padding: 8px 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	font-size: 0.78rem;
+	max-height: 230px;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(58, 37, 16, 0.6) transparent;
+}
+#chat-messages-game .cm { line-height: 1.35; color: #f0d080; }
+#chat-messages-game .cm .cn { font-weight: bold; color: #c07020; }
+#chat-messages-game .cm.sys { color: #806030; font-style: italic; font-size: 0.72rem; }
+#chat-input-bar {
+	display: flex;
+	border-top: 1px solid rgba(58, 37, 16, 0.6);
+	background: rgba(13, 8, 4, 0.9);
+}
+#chat-input-bar input {
+	flex: 1;
+	background: transparent;
+	border: none;
+	color: #f0d080;
+	font-family: Georgia, serif;
+	font-size: 0.78rem;
+	padding: 8px 10px;
+	outline: none;
+}
+#chat-input-bar input::placeholder { color: #604020; }
+#chat-input-bar button {
+	background: #c07020;
+	color: #fff;
+	border: none;
+	padding: 8px 14px;
+	font-family: Georgia, serif;
+	font-size: 0.75rem;
+	font-weight: bold;
+	cursor: pointer;
+	letter-spacing: 1px;
+}
+#chat-input-bar button:hover { background: #e08830; }
+#chat-unread {
+	background: #e06040;
+	color: #fff;
+	font-size: 0.65rem;
+	padding: 1px 6px;
+	border-radius: 10px;
+	display: none;
+	margin-left: 6px;
+}
+</style>
 	</head>
 	<body>
 		<canvas id="canvas">
@@ -107,6 +196,20 @@ body {
 			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="age-of-war.png" alt="">
 			<progress id="status-progress"></progress>
 			<div id="status-notice"></div>
+		</div>
+
+		<div id="chat-overlay">
+			<div id="chat-header" onclick="toggleChat()">
+				<span>CHAT <span id="chat-unread"></span></span>
+				<span id="chat-toggle-icon">&#9660;</span>
+			</div>
+			<div id="chat-body">
+				<div id="chat-messages-game"></div>
+				<div id="chat-input-bar">
+					<input type="text" id="gameChatInput" placeholder="Type a message..." maxlength="300" />
+					<button onclick="gameSendChat()">Send</button>
+				</div>
+			</div>
 		</div>
 
 		<script src="age-of-war.js"></script>
@@ -214,6 +317,103 @@ const engine = new Engine(GODOT_CONFIG);
 		}, displayFailureNotice);
 	}
 }());
+		</script>
+		<script src="config.js"></script>
+		<script>
+(function() {
+	const params = new URLSearchParams(window.location.search);
+	const serverParam = params.get("server");
+	const playerName = params.get("name") || localStorage.getItem("aow_name") || "Anonymous";
+
+	let wsUrl;
+	if (serverParam) {
+		wsUrl = serverParam;
+	} else if (window.GAME_CONFIG && window.GAME_CONFIG.WS_URL) {
+		wsUrl = window.GAME_CONFIG.WS_URL;
+	} else {
+		const proto = location.protocol === "https:" ? "wss://" : "ws://";
+		wsUrl = proto + location.host;
+	}
+
+	let chatWs = null;
+	let collapsed = false;
+	let unreadCount = 0;
+
+	function chatConnect() {
+		chatWs = new WebSocket(wsUrl);
+		chatWs.onopen = function() {
+			chatWs.send(JSON.stringify({ type: "set_name", name: playerName }));
+		};
+		chatWs.onmessage = function(e) {
+			const msg = JSON.parse(e.data);
+			if (msg.type === "chat") appendMsg(msg);
+			else if (msg.type === "chat_history" && msg.messages) {
+				for (const m of msg.messages) appendMsg(m, false);
+				scrollChat();
+			}
+		};
+		chatWs.onclose = function() { setTimeout(chatConnect, 4000); };
+		chatWs.onerror = function() {};
+	}
+
+	function appendMsg(msg, scroll) {
+		const el = document.getElementById("chat-messages-game");
+		const d = document.createElement("div");
+		d.className = "cm" + (msg.system ? " sys" : "");
+		if (msg.system) {
+			d.textContent = msg.message;
+		} else {
+			const n = document.createElement("span");
+			n.className = "cn";
+			n.textContent = msg.name + ": ";
+			d.appendChild(n);
+			d.appendChild(document.createTextNode(msg.message));
+		}
+		el.appendChild(d);
+		if (el.children.length > 150) el.removeChild(el.firstChild);
+		if (scroll !== false) scrollChat();
+		if (collapsed) {
+			unreadCount++;
+			const badge = document.getElementById("chat-unread");
+			badge.textContent = unreadCount;
+			badge.style.display = "inline";
+		}
+	}
+
+	function scrollChat() {
+		const el = document.getElementById("chat-messages-game");
+		el.scrollTop = el.scrollHeight;
+	}
+
+	window.gameSendChat = function() {
+		const input = document.getElementById("gameChatInput");
+		const text = input.value.trim();
+		if (!text || !chatWs || chatWs.readyState !== WebSocket.OPEN) return;
+		chatWs.send(JSON.stringify({ type: "chat", message: text }));
+		input.value = "";
+	};
+
+	window.toggleChat = function() {
+		collapsed = !collapsed;
+		document.getElementById("chat-overlay").classList.toggle("collapsed", collapsed);
+		document.getElementById("chat-toggle-icon").innerHTML = collapsed ? "&#9650;" : "&#9660;";
+		if (!collapsed) {
+			unreadCount = 0;
+			document.getElementById("chat-unread").style.display = "none";
+			scrollChat();
+		}
+	};
+
+	document.getElementById("gameChatInput").addEventListener("keydown", function(e) {
+		if (e.key === "Enter") gameSendChat();
+		e.stopPropagation();
+	});
+
+	document.getElementById("gameChatInput").addEventListener("keyup", function(e) { e.stopPropagation(); });
+	document.getElementById("gameChatInput").addEventListener("keypress", function(e) { e.stopPropagation(); });
+
+	chatConnect();
+})();
 		</script>
 	</body>
 </html>
