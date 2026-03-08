@@ -511,7 +511,7 @@
         ? "&server=" + encodeURIComponent(window.GAME_CONFIG.WS_URL)
         : "";
       const nameParam = playerName ? "&name=" + encodeURIComponent(playerName) : "";
-      window.location.href = `/index.html?lobby=${lobbyId}&role=${role}${serverParam}${nameParam}`;
+      window.location.href = `/game.html?lobby=${lobbyId}&role=${role}${serverParam}${nameParam}`;
     }
 
     /* ── Chat ──────────────────────────────────────────── */
