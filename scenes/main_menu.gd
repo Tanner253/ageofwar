@@ -1,5 +1,15 @@
 extends Control
 
+func _ready():
+	# Web multiplayer: skip main menu and go straight to lobby/waiting screen
+	if OS.has_feature("web"):
+		var lobby_param = str(JavaScriptBridge.eval(
+			"(new URLSearchParams(window.location.search)).get('lobby') || ''"
+		))
+		if lobby_param != "" and lobby_param != "null":
+			get_tree().change_scene_to_file("res://scenes/lobby.tscn")
+			return
+
 func _on_multiplayer_pressed():
 	# In the browser this redirects to the lobby page.
 	# In editor, navigate to the Godot lobby screen.

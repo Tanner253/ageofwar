@@ -49,19 +49,20 @@ func add_turret_spot():
 
 
 func _on_button_tower_base_pressed():
-	if turret_array[0] == 0: # means we are buying the turret
+	if turret_array[0] == 0:
 		var turret_name = get_node("/root/main_game/sprite_follow_player_mouse").turret_name
 		get_node("/root/main_game/sprite_follow_player_mouse").queue_free()
 		get_node("/root/main_game/Camera2D/in_game_menu").hide_turret_cancel_button_and_show_turret_menu()
 		deactivate_buttons()
-		# print(turret_name)
 		var turret_base = load("res://bases/" + turret_name + ".tscn").instantiate()
 		turret_base.name += "_" + str(randi())
 		self.add_child(turret_base)
 		turret_base.position = get_node("button_container").get_child(0).position + Vector2(16, 16)
 		turret_array[0] = 1
 		turret_data[0] = turret_base
-	elif turret_array[0] == 1: # means we are selling the turret
+		if MultiplayerManager.is_multiplayer_game:
+			MultiplayerManager.send_turret_action("buy", 0, turret_name)
+	elif turret_array[0] == 1:
 		deactivate_buttons()
 		var stage = turret_data[0].name.split("_")[0]
 		var turret_number = int(turret_data[0].name.split("_")[2])
@@ -71,6 +72,8 @@ func _on_button_tower_base_pressed():
 		turret_data[0] = null
 		turret_array[0] = 0
 		get_node("/root/main_game/Camera2D/in_game_menu")._on_cancel_sell_turret_pressed()
+		if MultiplayerManager.is_multiplayer_game:
+			MultiplayerManager.send_turret_action("sell", 0)
 
 
 func activate_turret_buy_buttons():
@@ -114,7 +117,7 @@ func hide_buttons():
 
 
 func _on_button_tower_bottom_pressed():
-	if turret_array[1] == 0: # means we are buying the turret
+	if turret_array[1] == 0:
 		var turret_name = get_node("/root/main_game/sprite_follow_player_mouse").turret_name
 		get_node("/root/main_game/sprite_follow_player_mouse").queue_free()
 		get_node("/root/main_game/Camera2D/in_game_menu").hide_turret_cancel_button_and_show_turret_menu()
@@ -125,7 +128,9 @@ func _on_button_tower_bottom_pressed():
 		turret_base.position = get_node("button_container").get_child(1).position + Vector2(16, 16)
 		turret_array[1] = 1
 		turret_data[1] = turret_base
-	elif turret_array[1] == 1: # means we are selling the turret
+		if MultiplayerManager.is_multiplayer_game:
+			MultiplayerManager.send_turret_action("buy", 1, turret_name)
+	elif turret_array[1] == 1:
 		deactivate_buttons()
 		var stage = turret_data[1].name.split("_")[0]
 		var turret_number = int(turret_data[1].name.split("_")[2])
@@ -135,6 +140,8 @@ func _on_button_tower_bottom_pressed():
 		turret_data[1] = null
 		turret_array[1] = 0
 		get_node("/root/main_game/Camera2D/in_game_menu")._on_cancel_sell_turret_pressed()
+		if MultiplayerManager.is_multiplayer_game:
+			MultiplayerManager.send_turret_action("sell", 1)
 
 func take_damage(damage):
 	health -= damage
@@ -174,7 +181,7 @@ func get_price_of_new_turret_slot():
 
 
 func _on_button_tower_part_pressed():
-	if turret_array[2] == 0: # means we are buying the turret
+	if turret_array[2] == 0:
 		var turret_name = get_node("/root/main_game/sprite_follow_player_mouse").turret_name
 		get_node("/root/main_game/sprite_follow_player_mouse").queue_free()
 		get_node("/root/main_game/Camera2D/in_game_menu").hide_turret_cancel_button_and_show_turret_menu()
@@ -185,7 +192,9 @@ func _on_button_tower_part_pressed():
 		turret_base.position = get_node("button_container").get_child(2).position + Vector2(16, 16)
 		turret_array[2] = 1
 		turret_data[2] = turret_base
-	elif turret_array[2] == 1: # means we are selling the turret
+		if MultiplayerManager.is_multiplayer_game:
+			MultiplayerManager.send_turret_action("buy", 2, turret_name)
+	elif turret_array[2] == 1:
 		deactivate_buttons()
 		var stage = turret_data[2].name.split("_")[0]
 		var turret_number = int(turret_data[2].name.split("_")[2])
@@ -195,10 +204,12 @@ func _on_button_tower_part_pressed():
 		turret_data[2] = null
 		turret_array[2] = 0
 		get_node("/root/main_game/Camera2D/in_game_menu")._on_cancel_sell_turret_pressed()
+		if MultiplayerManager.is_multiplayer_game:
+			MultiplayerManager.send_turret_action("sell", 2)
 
 
 func _on_button_tower_top_pressed():
-	if turret_array[3] == 0: # means we are buying the turret
+	if turret_array[3] == 0:
 		var turret_name = get_node("/root/main_game/sprite_follow_player_mouse").turret_name
 		get_node("/root/main_game/sprite_follow_player_mouse").queue_free()
 		get_node("/root/main_game/Camera2D/in_game_menu").hide_turret_cancel_button_and_show_turret_menu()
@@ -209,7 +220,9 @@ func _on_button_tower_top_pressed():
 		turret_base.position = get_node("button_container").get_child(3).position + Vector2(16, 16)
 		turret_array[3] = 1
 		turret_data[3] = turret_base
-	elif turret_array[3] == 1: # means we are selling the turret
+		if MultiplayerManager.is_multiplayer_game:
+			MultiplayerManager.send_turret_action("buy", 3, turret_name)
+	elif turret_array[3] == 1:
 		deactivate_buttons()
 		var stage = turret_data[3].name.split("_")[0]
 		var turret_number = int(turret_data[3].name.split("_")[2])
@@ -219,6 +232,8 @@ func _on_button_tower_top_pressed():
 		turret_data[3] = null
 		turret_array[3] = 0
 		get_node("/root/main_game/Camera2D/in_game_menu")._on_cancel_sell_turret_pressed()
+		if MultiplayerManager.is_multiplayer_game:
+			MultiplayerManager.send_turret_action("sell", 3)
 
 func advance_base_sprite():
 	if GlobalVariables.current_stage == GlobalVariables.stage.knight:
@@ -290,8 +305,31 @@ func update_sprite_ai():
 		$PanelContainer/current_health.custom_minimum_size.y = 250 * health/max_health
 	$Label.text = str(health)
 
+### Multiplayer remote actions ###
+
+func remote_buy_turret(slot: int, turret_name: String):
+	if slot < 0 or slot >= turret_array.size():
+		return
+	var turret_base = load("res://bases/" + turret_name + ".tscn").instantiate()
+	turret_base.name += "_" + str(randi())
+	self.add_child(turret_base)
+	turret_base.is_player_owned = false
+	turret_base.position = get_node("button_container").get_child(slot).position + Vector2(16, 16)
+	turret_array[slot] = 1
+	turret_data[slot] = turret_base
+
+func remote_sell_turret(slot: int):
+	if slot < 0 or slot >= turret_array.size():
+		return
+	if turret_data[slot]:
+		turret_data[slot].queue_free()
+		turret_data[slot] = null
+		turret_array[slot] = 0
+
+func remote_add_turret_spot():
+	add_ai_turret_spot()
+
 ### AI ###
-# Functions used for the enemy base
 
 func spawn_ai_turret(age: String):
 	var index = get_next_available_spot()

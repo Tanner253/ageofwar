@@ -3,203 +3,556 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Age of War — Multiplayer</title>
+  <title>Age of War — Multiplayer Arena</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-dark: #0f0a04;
+      --bg-card: #1a1208;
+      --bg-card-hover: #251a0c;
+      --bg-chat: #110c04;
+      --gold: #ffd050;
+      --gold-dim: #c09030;
+      --orange: #c07020;
+      --text: #f0d080;
+      --text-muted: #806030;
+      --border: #3a2510;
+      --border-hover: #8a5020;
+      --status-open: #40e0a0;
+      --status-waiting: #ffc040;
+      --status-playing: #e06040;
+      --radius: 10px;
+    }
 
     body {
-      background: #1a1208;
-      color: #f0d080;
-      font-family: Georgia, serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: Georgia, "Times New Roman", serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+    }
+
+    /* ── Header ──────────────────────────────────────────── */
+    .header {
+      text-align: center;
+      padding: 28px 20px 20px;
+      background: linear-gradient(180deg, #2a1808 0%, var(--bg-dark) 100%);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .header h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      color: var(--gold);
+      text-shadow: 0 0 30px rgba(255, 128, 0, 0.4), 2px 2px 0 #5a2000;
+      letter-spacing: 6px;
+    }
+    .header .subtitle {
+      font-size: 1rem;
+      color: var(--gold-dim);
+      letter-spacing: 3px;
+      margin-top: 4px;
+    }
+    .header-meta {
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
       align-items: center;
-      padding: 40px 20px;
-      background-image: radial-gradient(ellipse at 50% 0%, #3a2510 0%, #1a1208 60%);
+      gap: 16px;
+      font-size: 0.85rem;
+    }
+    .online-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--status-open);
+      font-weight: bold;
+    }
+    .online-dot {
+      width: 8px; height: 8px;
+      background: var(--status-open);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .connection-status {
+      color: var(--text-muted);
+      font-size: 0.8rem;
     }
 
-    h1 {
-      font-size: 3rem;
-      color: #ffd050;
-      text-shadow: 0 0 20px #ff8000, 2px 2px 0 #5a2000;
-      letter-spacing: 4px;
-      margin-bottom: 8px;
+    /* ── Main layout ─────────────────────────────────────── */
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 0;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
     }
 
-    .subtitle {
+    /* ── Arenas ───────────────────────────────────────────── */
+    .arenas-section { padding-right: 24px; }
+    .section-title {
       font-size: 1.1rem;
-      color: #c09040;
-      margin-bottom: 40px;
+      color: var(--gold-dim);
       letter-spacing: 2px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
     }
-
     .arenas {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      width: 100%;
-      max-width: 1100px;
-      margin-bottom: 40px;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
     }
-
     .arena-card {
-      background: linear-gradient(160deg, #2e1a08 0%, #1e1004 100%);
-      border: 2px solid #6a4010;
-      border-radius: 8px;
-      padding: 24px 20px;
+      background: linear-gradient(160deg, var(--bg-card) 0%, #140e06 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
-      transition: border-color 0.2s;
+      gap: 10px;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      cursor: default;
     }
-
-    .arena-card:hover { border-color: #c08030; }
-
+    .arena-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
     .arena-name {
-      font-size: 1.3rem;
+      font-size: 1.15rem;
       font-weight: bold;
-      color: #ffd050;
-      text-align: center;
+      color: var(--gold);
     }
-
-    .arena-status {
-      font-size: 0.9rem;
-      padding: 4px 12px;
+    .arena-badge {
+      font-size: 0.75rem;
+      padding: 3px 12px;
       border-radius: 20px;
       font-weight: bold;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .badge-empty   { background: #1a2a20; color: var(--status-open); border: 1px solid #2a4a30; }
+    .badge-waiting { background: #2a2410; color: var(--status-waiting); border: 1px solid #4a3a10; animation: pulse 2s infinite; }
+    .badge-playing { background: #2a1414; color: var(--status-playing); border: 1px solid #4a2020; }
+
+    .arena-players {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .arena-players strong { color: var(--text); }
+    .arena-spectators {
+      font-size: 0.75rem;
+      color: var(--text-muted);
     }
 
-    .status-empty    { background: #333; color: #888; }
-    .status-waiting  { background: #2a4020; color: #80e040; }
-    .status-playing  { background: #402020; color: #e06040; }
-
-    .arena-info { font-size: 0.85rem; color: #a08050; text-align: center; }
-
-    .btn-row { display: flex; gap: 8px; }
-
+    .btn-row { display: flex; gap: 8px; margin-top: 4px; }
     button {
-      padding: 8px 20px;
+      padding: 7px 18px;
       border: none;
-      border-radius: 5px;
-      font-size: 0.9rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
       font-family: Georgia, serif;
       cursor: pointer;
       font-weight: bold;
       letter-spacing: 1px;
-      transition: filter 0.15s;
+      transition: filter 0.15s, transform 0.1s;
     }
-    button:hover { filter: brightness(1.2); }
-    button:disabled { filter: brightness(0.5); cursor: not-allowed; }
+    button:hover:not(:disabled) { filter: brightness(1.2); transform: translateY(-1px); }
+    button:active:not(:disabled) { transform: translateY(0); }
+    button:disabled { opacity: 0.35; cursor: not-allowed; }
 
-    .btn-play    { background: #c07020; color: #fff8e0; }
-    .btn-spectate { background: #304050; color: #a0c0e0; }
+    .btn-play { background: linear-gradient(135deg, #c07020, #e08830); color: #fff8e0; }
+    .btn-spectate { background: linear-gradient(135deg, #2a3a4a, #3a4a5a); color: #a0c0e0; }
 
-    .refresh-row {
-      color: #806030;
-      font-size: 0.8rem;
-      margin-bottom: 20px;
+    /* ── Chat panel ───────────────────────────────────────── */
+    .chat-section {
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--border);
+      padding-left: 24px;
+      min-height: 0;
     }
-
-    .tip {
-      max-width: 700px;
-      text-align: center;
-      color: #806030;
+    .chat-box {
+      flex: 1;
+      background: var(--bg-chat);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 400px;
+      max-height: 65vh;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       font-size: 0.85rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .chat-msg { line-height: 1.4; animation: fadeIn 0.2s ease; }
+    .chat-msg .name { font-weight: bold; color: var(--orange); }
+    .chat-msg .text { color: var(--text); }
+    .chat-msg.system { color: var(--text-muted); font-style: italic; font-size: 0.8rem; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .chat-input-row {
+      display: flex;
+      border-top: 1px solid var(--border);
+      background: #0d0804;
+    }
+    .chat-input-row input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: Georgia, serif;
+      font-size: 0.85rem;
+      padding: 10px 12px;
+      outline: none;
+    }
+    .chat-input-row input::placeholder { color: var(--text-muted); }
+    .chat-input-row button {
+      background: var(--orange);
+      color: #fff;
+      border-radius: 0;
+      padding: 10px 16px;
+      font-size: 0.8rem;
+    }
+
+    /* ── Name bar ─────────────────────────────────────────── */
+    .name-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 0.85rem;
+    }
+    .name-bar label { color: var(--text-muted); white-space: nowrap; }
+    .name-bar input {
+      flex: 1;
+      background: var(--bg-chat);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--gold);
+      font-family: Georgia, serif;
+      font-size: 0.85rem;
+      padding: 6px 10px;
+      outline: none;
+    }
+    .name-bar input:focus { border-color: var(--orange); }
+    .name-bar button {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      background: var(--border);
+      color: var(--text);
+    }
+
+    /* ── Footer ───────────────────────────────────────────── */
+    .footer {
+      text-align: center;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.8rem;
       line-height: 1.6;
+    }
+    .footer a { color: var(--gold-dim); text-decoration: none; }
+    .footer a:hover { color: var(--gold); }
+
+    /* ── Name modal ──────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: linear-gradient(160deg, #2a1a08, #1a1004);
+      border: 2px solid var(--gold-dim);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      max-width: 380px;
+      width: 90%;
+    }
+    .modal h2 { color: var(--gold); font-size: 1.4rem; margin-bottom: 8px; }
+    .modal p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+    .modal input {
+      width: 100%;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--gold);
+      font-family: Georgia, serif;
+      font-size: 1.1rem;
+      padding: 10px 14px;
+      text-align: center;
+      outline: none;
+      margin-bottom: 16px;
+    }
+    .modal input:focus { border-color: var(--orange); }
+    .modal button {
+      background: linear-gradient(135deg, #c07020, #e08830);
+      color: #fff8e0;
+      padding: 10px 32px;
+      font-size: 1rem;
+      border-radius: 8px;
+    }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @media (max-width: 800px) {
+      .main {
+        grid-template-columns: 1fr;
+        padding: 16px;
+      }
+      .arenas-section { padding-right: 0; margin-bottom: 20px; }
+      .chat-section { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 20px; }
+      .header-meta { position: static; transform: none; justify-content: center; margin-top: 12px; }
+      .chat-box { min-height: 250px; max-height: 40vh; }
     }
   </style>
 </head>
 <body>
-  <h1>AGE OF WAR</h1>
-  <p class="subtitle">MULTIPLAYER PVP</p>
 
-  <div class="arenas" id="arenas">
-    <!-- populated by JS -->
+  <!-- Name modal on first visit -->
+  <div class="modal-overlay hidden" id="nameModal">
+    <div class="modal">
+      <h2>Enter the Arena</h2>
+      <p>Choose your warrior name</p>
+      <input type="text" id="modalNameInput" maxlength="20" placeholder="Your name..." autofocus />
+      <br />
+      <button onclick="saveName()">Enter</button>
+    </div>
   </div>
 
-  <p class="refresh-row" id="refreshMsg">Connecting to server…</p>
+  <!-- Header -->
+  <header class="header">
+    <h1>AGE OF WAR</h1>
+    <p class="subtitle">MULTIPLAYER ARENA</p>
+    <div class="header-meta">
+      <div class="online-badge">
+        <span class="online-dot"></span>
+        <span id="onlineCount">--</span> online
+      </div>
+      <span class="connection-status" id="connStatus">Connecting...</span>
+    </div>
+  </header>
 
-  <p class="tip">
-    Choose an empty arena to start a game. Share the arena name with a friend so they can join you.
-    Watch ongoing battles as a spectator while you wait for an open slot.
-  </p>
+  <!-- Main -->
+  <main class="main">
+    <!-- Left: Arenas -->
+    <section class="arenas-section">
+      <div class="section-title">Battle Arenas</div>
+      <div class="arenas" id="arenas"></div>
+    </section>
 
+    <!-- Right: Chat -->
+    <section class="chat-section">
+      <div class="section-title">Global Chat</div>
+      <div class="chat-box">
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="Type a message..." maxlength="300" />
+          <button onclick="sendChat()">Send</button>
+        </div>
+      </div>
+      <div class="name-bar">
+        <label>Name:</label>
+        <input type="text" id="nameInput" maxlength="20" />
+        <button onclick="updateName()">Save</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    Choose an arena and challenge a friend. Share this link to play together!
+    <br />
+    Powered by <a href="https://github.com/Tanner253/ageofwar" target="_blank">Age of War</a>
+    &mdash; a recreation of the classic Flash game.
+  </footer>
+
+  <script src="config.js"></script>
   <script>
-    const wsProto = location.protocol === "https:" ? "wss://" : "ws://";
-    const ws = new WebSocket(wsProto + location.host);
-    let lastUpdate = null;
+    /* ── State ─────────────────────────────────────────── */
+    let ws = null;
+    let playerName = localStorage.getItem("aow_name") || "";
+    let reconnectTimer = null;
 
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "get_lobbies" }));
-    };
+    /* ── Name modal ───────────────────────────────────── */
+    if (!playerName) {
+      document.getElementById("nameModal").classList.remove("hidden");
+      document.getElementById("modalNameInput").focus();
+      document.getElementById("modalNameInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") saveName();
+      });
+    } else {
+      document.getElementById("nameInput").value = playerName;
+    }
 
-    ws.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
-      if (msg.type === "lobby_list") {
-        renderLobbies(msg.lobbies);
-        lastUpdate = new Date();
-        document.getElementById("refreshMsg").textContent =
-          "Updated " + lastUpdate.toLocaleTimeString();
+    function saveName() {
+      const input = document.getElementById("modalNameInput");
+      const name = input.value.trim();
+      if (!name) { input.focus(); return; }
+      playerName = name;
+      localStorage.setItem("aow_name", playerName);
+      document.getElementById("nameInput").value = playerName;
+      document.getElementById("nameModal").classList.add("hidden");
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "set_name", name: playerName }));
       }
-    };
+    }
 
-    ws.onclose = () => {
-      document.getElementById("refreshMsg").textContent = "Disconnected — refresh the page.";
-    };
+    function updateName() {
+      const name = document.getElementById("nameInput").value.trim();
+      if (!name) return;
+      playerName = name;
+      localStorage.setItem("aow_name", playerName);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "set_name", name: playerName }));
+      }
+    }
 
-    // Poll every 3 seconds
+    /* ── WebSocket ─────────────────────────────────────── */
+    function connect() {
+      const url = window.GAME_CONFIG.WS_URL;
+      ws = new WebSocket(url);
+
+      ws.onopen = () => {
+        document.getElementById("connStatus").textContent = "Connected";
+        document.getElementById("connStatus").style.color = "#40e0a0";
+        if (playerName) {
+          ws.send(JSON.stringify({ type: "set_name", name: playerName }));
+        }
+        ws.send(JSON.stringify({ type: "get_lobbies" }));
+      };
+
+      ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        switch (msg.type) {
+          case "lobby_list":
+            renderLobbies(msg.lobbies);
+            break;
+          case "chat":
+            appendChat(msg);
+            break;
+          case "chat_history":
+            renderChatHistory(msg.messages);
+            break;
+          case "online_count":
+            document.getElementById("onlineCount").textContent = msg.count;
+            break;
+        }
+      };
+
+      ws.onclose = () => {
+        document.getElementById("connStatus").textContent = "Disconnected — reconnecting...";
+        document.getElementById("connStatus").style.color = "#e06040";
+        reconnectTimer = setTimeout(connect, 3000);
+      };
+
+      ws.onerror = () => {};
+    }
+
+    connect();
+
+    // Refresh lobbies periodically
     setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "get_lobbies" }));
       }
-    }, 3000);
+    }, 4000);
 
+    /* ── Lobby rendering ──────────────────────────────── */
     function renderLobbies(lobbies) {
-      const container = document.getElementById("arenas");
-      container.innerHTML = "";
+      const el = document.getElementById("arenas");
+      el.innerHTML = "";
       for (const lobby of lobbies) {
+        const statusMap = { empty: "OPEN", waiting: "WAITING", playing: "IN BATTLE" };
+        const badgeClass = { empty: "badge-empty", waiting: "badge-waiting", playing: "badge-playing" };
+        const canPlay = lobby.status !== "playing";
+        const canWatch = lobby.status === "playing";
+
         const card = document.createElement("div");
         card.className = "arena-card";
-
-        const statusLabel = { empty: "OPEN", waiting: "WAITING", playing: "IN PROGRESS" }[lobby.status] || lobby.status.toUpperCase();
-        const statusClass = "status-" + lobby.status;
-
-        const spectateCount = lobby.spectators ? ` · ${lobby.spectators} watching` : "";
-        const info =
-          lobby.status === "empty"    ? "No players yet" :
-          lobby.status === "waiting"  ? "1 player waiting for opponent" :
-          `Battle in progress${spectateCount}`;
-
-        const canPlay    = lobby.status !== "playing";
-        const canSpectate = lobby.status === "playing";
-
         card.innerHTML = `
           <div class="arena-name">${lobby.name}</div>
-          <span class="arena-status ${statusClass}">${statusLabel}</span>
-          <div class="arena-info">${info}</div>
+          <span class="arena-badge ${badgeClass[lobby.status]}">${statusMap[lobby.status]}</span>
+          <div class="arena-players"><strong>${lobby.players}</strong> / 2 players</div>
+          ${lobby.spectators > 0 ? `<div class="arena-spectators">${lobby.spectators} spectating</div>` : ""}
           <div class="btn-row">
-            <button class="btn-play"
-              ${canPlay ? "" : "disabled"}
-              onclick="joinLobby('${lobby.id}', 'player')">
-              ⚔ Play
-            </button>
-            <button class="btn-spectate"
-              ${canSpectate ? "" : "disabled"}
-              onclick="joinLobby('${lobby.id}', 'spectator')">
-              👁 Watch
-            </button>
+            <button class="btn-play" ${canPlay ? "" : "disabled"} onclick="joinLobby('${lobby.id}', 'player')">Play</button>
+            <button class="btn-spectate" ${canWatch ? "" : "disabled"} onclick="joinLobby('${lobby.id}', 'spectator')">Watch</button>
           </div>
         `;
-        container.appendChild(card);
+        el.appendChild(card);
       }
     }
 
     function joinLobby(lobbyId, role) {
-      // Navigate to the Godot game with lobby info in URL params
-      window.location.href = `/index.html?lobby=${lobbyId}&role=${role}`;
+      const serverParam = window.GAME_CONFIG.SERVER_URL
+        ? "&server=" + encodeURIComponent(window.GAME_CONFIG.WS_URL)
+        : "";
+      const nameParam = playerName ? "&name=" + encodeURIComponent(playerName) : "";
+      window.location.href = `/index.html?lobby=${lobbyId}&role=${role}${serverParam}${nameParam}`;
+    }
+
+    /* ── Chat ──────────────────────────────────────────── */
+    function renderChatHistory(messages) {
+      const el = document.getElementById("chatMessages");
+      el.innerHTML = "";
+      if (!messages) return;
+      for (const msg of messages) appendChat(msg, false);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function appendChat(msg, scroll = true) {
+      const el = document.getElementById("chatMessages");
+      const div = document.createElement("div");
+      div.className = "chat-msg" + (msg.system ? " system" : "");
+      if (msg.system) {
+        div.textContent = msg.message;
+      } else {
+        div.innerHTML = `<span class="name">${escHtml(msg.name)}:</span> <span class="text">${escHtml(msg.message)}</span>`;
+      }
+      el.appendChild(div);
+      if (el.children.length > 200) el.removeChild(el.firstChild);
+      if (scroll) el.scrollTop = el.scrollHeight;
+    }
+
+    function sendChat() {
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+      if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: "chat", message: text }));
+      input.value = "";
+    }
+
+    document.getElementById("chatInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendChat();
+    });
+
+    function escHtml(s) {
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
     }
   </script>
 </body>

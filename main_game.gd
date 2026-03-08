@@ -72,6 +72,7 @@ func _setup_multiplayer():
 	MultiplayerManager.enemy_spawn_received.connect(_on_enemy_spawn_received)
 	MultiplayerManager.enemy_special_received.connect(_on_enemy_special_received)
 	MultiplayerManager.enemy_age_advance_received.connect(_on_enemy_age_advance)
+	MultiplayerManager.enemy_turret_received.connect(_on_enemy_turret_received)
 	MultiplayerManager.opponent_disconnected.connect(_on_opponent_disconnected)
 	MultiplayerManager.game_over_received.connect(_on_game_over_received)
 
@@ -164,6 +165,15 @@ func _on_enemy_special_received(attack_type: String, _from: int):
 
 func _on_enemy_age_advance(_new_age: String, _from: int):
 	$enemy_base.update_sprite_ai()
+
+func _on_enemy_turret_received(action: String, slot: int, turret_name: String, _from: int):
+	match action:
+		"buy":
+			$enemy_base.remote_buy_turret(slot, turret_name)
+		"sell":
+			$enemy_base.remote_sell_turret(slot)
+		"add_slot":
+			$enemy_base.remote_add_turret_spot()
 
 func _on_opponent_disconnected():
 	# Show a message — the base will eventually be destroyed or they can return

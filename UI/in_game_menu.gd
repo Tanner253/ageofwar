@@ -61,6 +61,8 @@ func _on_advance_pressed():
 		get_node("/root/main_game/player_base").advance_base_sprite()
 		if GlobalVariables.current_stage == GlobalVariables.stage.future:
 			$units_menu/HBoxContainer/special.disabled = false
+		if MultiplayerManager.is_multiplayer_game:
+			MultiplayerManager.send_age_advance(GlobalVariables.get_current_age_as_string())
 	else:
 		$root_label.show()
 		$root_label.text = "Not enough XP!"
@@ -166,20 +168,28 @@ func _on_tank_pressed():
 
 
 func _on_special_button_pressed():
+	var attack_type := ""
 	if GlobalVariables.current_stage == GlobalVariables.stage.cave:
+		attack_type = "cave"
 		get_node("/root/main_game").cave_special_attack()
 		get_node("/root/main_game/Camera2D").apply_shake()
 	elif GlobalVariables.current_stage == GlobalVariables.stage.knight:
+		attack_type = "knight"
 		get_node("/root/main_game").knight_special_attack()
 		get_node("/root/main_game/Camera2D").apply_shake()
 	elif GlobalVariables.current_stage == GlobalVariables.stage.medival:
+		attack_type = "medival"
 		get_node("/root/main_game").medival_special_attack()
 	elif GlobalVariables.current_stage == GlobalVariables.stage.miltary:
+		attack_type = "miltary"
 		get_node("/root/main_game").miltary_special_attack()
 		get_node("/root/main_game/Camera2D").apply_shake()
 	elif GlobalVariables.current_stage == GlobalVariables.stage.future:
+		attack_type = "future"
 		get_node("/root/main_game").future_special_attack()
 		get_node("/root/main_game/Camera2D").apply_shake()
+	if attack_type != "" and MultiplayerManager.is_multiplayer_game:
+		MultiplayerManager.send_special(attack_type)
 
 
 
@@ -314,8 +324,9 @@ func _on_add_turret_spot_pressed():
 		$root_label.show()
 		$root_label.text = "Not enough money to add a new turret spot"
 		return
-	var player_base = get_node("/root/main_game/player_base").add_turret_spot()
-	pass # Replace with function body.
+	get_node("/root/main_game/player_base").add_turret_spot()
+	if MultiplayerManager.is_multiplayer_game:
+		MultiplayerManager.send_turret_action("add_slot", -1)
 
 
 func _on_turret_1_mouse_entered():

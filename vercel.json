@@ -9,5 +9,8 @@
         { "key": "Cross-Origin-Resource-Policy", "value": "same-site" }
       ]
     }
+  ],
+  "rewrites": [
+    { "source": "/", "destination": "/lobby.html" }
   ]
 }

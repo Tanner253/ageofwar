@@ -7,6 +7,7 @@ signal game_started(player_num: int)
 signal enemy_spawn_received(unit_type: String, stage: String, from_player_num: int)
 signal enemy_special_received(attack_type: String, from_player_num: int)
 signal enemy_age_advance_received(new_age: String, from_player_num: int)
+signal enemy_turret_received(action: String, slot: int, turret_name: String, from_player_num: int)
 signal opponent_disconnected()
 signal game_over_received(winner_num: int)
 signal connection_error(message: String)
@@ -27,7 +28,6 @@ var _pending_role := ""
 # ── Init ──────────────────────────────────────────────────────────────────────
 func _ready():
 	set_process(false)
-	# Auto-detect multiplayer from URL params (HTML5 only)
 	if OS.has_feature("web"):
 		var lid = _get_url_param("lobby")
 		var role = _get_url_param("role")
@@ -40,7 +40,7 @@ func _get_url_param(param: String) -> String:
 	if not OS.has_feature("web"):
 		return ""
 	var result = JavaScriptBridge.eval(
-		"(new URLSearchParams(window.location.search)).get('%s')" % param
+		"decodeURIComponent((new URLSearchParams(window.location.search)).get('%s') || '')" % param
 	)
 	if result == null:
 		return ""
@@ -48,6 +48,11 @@ func _get_url_param(param: String) -> String:
 
 func _get_server_url() -> String:
 	if OS.has_feature("web"):
+		# Explicit server URL passed from lobby page (split architecture)
+		var server_url = _get_url_param("server")
+		if server_url != "" and server_url != "null":
+			return server_url
+		# Fallback: same origin
 		var protocol = str(JavaScriptBridge.eval("window.location.protocol"))
 		var host     = str(JavaScriptBridge.eval("window.location.host"))
 		var ws_proto = "wss://" if protocol == "https:" else "ws://"
@@ -56,6 +61,8 @@ func _get_server_url() -> String:
 
 # ── Connection ────────────────────────────────────────────────────────────────
 func connect_to_server():
+	if ws.get_ready_state() != WebSocketPeer.STATE_CLOSED:
+		return
 	var url = _get_server_url()
 	var err = ws.connect_to_url(url)
 	if err != OK:
@@ -69,7 +76,7 @@ func _process(_delta):
 		WebSocketPeer.STATE_OPEN:
 			if not connected:
 				connected = true
-				# Auto-join lobby if params were found
+				_send_player_name()
 				if _pending_lobby_id != "":
 					join_lobby(_pending_lobby_id, _pending_role)
 					_pending_lobby_id = ""
@@ -80,6 +87,11 @@ func _process(_delta):
 			if connected:
 				connected = false
 				set_process(false)
+
+func _send_player_name():
+	var name_param = _get_url_param("name")
+	if name_param != "" and name_param != "null":
+		_send({ "type": "set_name", "name": name_param })
 
 # ── Message Handling ──────────────────────────────────────────────────────────
 func _handle_message(text: String):
@@ -122,6 +134,13 @@ func _handle_message(text: String):
 				msg.get("age", "cave"),
 				msg.get("player_num", 0))
 
+		"turret_action":
+			emit_signal("enemy_turret_received",
+				msg.get("action", "buy"),
+				msg.get("slot", 0),
+				msg.get("turret_name", ""),
+				msg.get("player_num", 0))
+
 		"opponent_disconnected":
 			emit_signal("opponent_disconnected")
 
@@ -147,6 +166,9 @@ func send_special(attack_type: String):
 
 func send_age_advance(new_age: String):
 	_send({ "type": "age_advance", "age": new_age })
+
+func send_turret_action(action: String, slot: int, turret_name: String = ""):
+	_send({ "type": "turret_action", "action": action, "slot": slot, "turret_name": turret_name })
 
 func send_game_over(winner_player_num: int):
 	_send({ "type": "game_over", "winner": winner_player_num })
