@@ -285,6 +285,70 @@ body {
 	.wo-status { font-size: 1.1rem; }
 	.wo-back { padding: 11px 24px; font-size: 0.9rem; }
 }
+
+#volume-overlay {
+	position: fixed;
+	bottom: 12px;
+	left: 12px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	background: rgba(15, 10, 4, 0.85);
+	border: 1px solid rgba(192, 112, 32, 0.4);
+	border-radius: 10px;
+	padding: 6px 12px;
+	font-family: Georgia, "Times New Roman", serif;
+	z-index: 9999;
+	backdrop-filter: blur(4px);
+	user-select: none;
+}
+#vol-btn {
+	background: none;
+	border: none;
+	color: #ffd050;
+	font-size: 1.2rem;
+	cursor: pointer;
+	padding: 2px 4px;
+	line-height: 1;
+}
+#vol-btn:hover { color: #e08830; }
+#vol-slider {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 90px;
+	height: 4px;
+	background: #3a2510;
+	border-radius: 2px;
+	outline: none;
+	cursor: pointer;
+}
+#vol-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: #c07020;
+	border: 2px solid #ffd050;
+	cursor: pointer;
+}
+#vol-slider::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: #c07020;
+	border: 2px solid #ffd050;
+	cursor: pointer;
+}
+@media (max-width: 600px) {
+	#volume-overlay {
+		bottom: auto;
+		top: 8px;
+		left: 8px;
+		padding: 5px 10px;
+	}
+	#vol-slider { width: 70px; }
+}
 </style>
 	</head>
 	<body>
@@ -299,6 +363,89 @@ body {
 				<a class="wo-back" href="/">Back to Lobby</a>
 			</div>
 		</div>
+
+		<div id="volume-overlay">
+			<button id="vol-btn" title="Mute/Unmute">&#128266;</button>
+			<input type="range" id="vol-slider" min="0" max="100" value="100" title="Volume" />
+		</div>
+
+		<script>
+(function() {
+	var masterGain = null;
+	var savedVolume = parseFloat(localStorage.getItem('aow_volume'));
+	if (isNaN(savedVolume)) savedVolume = 1;
+	var muted = false;
+
+	var OrigAudioContext = window.AudioContext || window.webkitAudioContext;
+	function PatchedAudioContext() {
+		var ctx = new OrigAudioContext();
+		if (!masterGain) {
+			masterGain = ctx.createGain();
+			masterGain.gain.value = savedVolume;
+			masterGain.connect(ctx.destination);
+			window._aowGain = masterGain;
+			applySlider();
+		}
+		return ctx;
+	}
+	if (OrigAudioContext) {
+		window.AudioContext = PatchedAudioContext;
+		if (window.webkitAudioContext) window.webkitAudioContext = PatchedAudioContext;
+	}
+
+	var origConnect = AudioNode.prototype.connect;
+	AudioNode.prototype.connect = function(dest) {
+		if (dest instanceof AudioDestinationNode && masterGain && this !== masterGain) {
+			return origConnect.call(this, masterGain);
+		}
+		return origConnect.apply(this, arguments);
+	};
+
+	function applySlider() {
+		var slider = document.getElementById('vol-slider');
+		var btn = document.getElementById('vol-btn');
+		if (slider) slider.value = Math.round(savedVolume * 100);
+		if (btn) btn.innerHTML = savedVolume <= 0 ? '&#128263;' : '&#128266;';
+	}
+
+	window.aowSetVolume = function(v) {
+		savedVolume = Math.max(0, Math.min(1, v));
+		localStorage.setItem('aow_volume', savedVolume);
+		if (masterGain) masterGain.gain.value = savedVolume;
+		var btn = document.getElementById('vol-btn');
+		if (btn) btn.innerHTML = savedVolume <= 0 ? '&#128263;' : '&#128266;';
+	};
+
+	document.addEventListener('DOMContentLoaded', function() {
+		var slider = document.getElementById('vol-slider');
+		var btn = document.getElementById('vol-btn');
+		applySlider();
+
+		slider.addEventListener('input', function() {
+			muted = false;
+			window.aowSetVolume(parseInt(slider.value) / 100);
+		});
+
+		var preMuteVolume = savedVolume;
+		btn.addEventListener('click', function() {
+			if (muted) {
+				muted = false;
+				var restore = preMuteVolume > 0 ? preMuteVolume : 1;
+				window.aowSetVolume(restore);
+				slider.value = Math.round(restore * 100);
+			} else {
+				preMuteVolume = savedVolume;
+				muted = true;
+				if (masterGain) masterGain.gain.value = 0;
+				btn.innerHTML = '&#128263;';
+			}
+		});
+
+		slider.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+		slider.addEventListener('touchstart', function(e) { e.stopPropagation(); });
+	});
+})();
+		</script>
 
 		<canvas id="canvas">
 			Your browser does not support the canvas tag.
