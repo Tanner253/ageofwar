@@ -192,9 +192,114 @@ body {
 	#chat-input-bar input { font-size: 16px; padding: 10px 8px; }
 	#chat-input-bar button { padding: 10px 12px; }
 }
+
+#waiting-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 5000;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: #0a0704;
+	font-family: 'Segoe UI', system-ui, sans-serif;
+	transition: opacity 0.5s;
+}
+#waiting-overlay.fade-out {
+	opacity: 0;
+	pointer-events: none;
+}
+#waiting-overlay.hidden { display: none; }
+.wo-bg {
+	position: absolute;
+	inset: 0;
+	background: url('hero-bg.png') center 20% / cover no-repeat;
+}
+.wo-dim {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to top, rgba(10,7,4,0.95) 0%, rgba(10,7,4,0.6) 50%, rgba(10,7,4,0.25) 100%);
+}
+.wo-content {
+	position: relative;
+	z-index: 1;
+	text-align: center;
+	margin-top: 20vh;
+}
+.wo-arena {
+	font-family: Georgia, serif;
+	font-size: 1.1rem;
+	color: #b88a30;
+	letter-spacing: 3px;
+	text-transform: uppercase;
+	margin-bottom: 8px;
+}
+.wo-status {
+	font-size: 1.4rem;
+	color: #ffd050;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+.wo-sub {
+	font-size: 0.8rem;
+	color: #7a5e38;
+	margin-bottom: 24px;
+}
+.wo-dots::after {
+	content: '';
+	animation: woDots 1.5s steps(4, end) infinite;
+}
+@keyframes woDots {
+	0% { content: ''; }
+	25% { content: '.'; }
+	50% { content: '..'; }
+	75% { content: '...'; }
+}
+.wo-back {
+	display: inline-block;
+	padding: 10px 28px;
+	border: 1px solid #3a2510;
+	border-radius: 8px;
+	background: rgba(14,10,5,0.8);
+	color: #dcc898;
+	font-family: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+	cursor: pointer;
+	text-decoration: none;
+	transition: all 0.15s;
+}
+.wo-back:hover { border-color: #b88a30; color: #ffd050; }
+.wo-spinner {
+	width: 28px; height: 28px;
+	border: 3px solid #2e1c0c;
+	border-top-color: #d4822a;
+	border-radius: 50%;
+	animation: spin 0.8s linear infinite;
+	margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 520px) {
+	.wo-content { margin-top: 30vh; }
+	.wo-status { font-size: 1.1rem; }
+	.wo-back { padding: 11px 24px; font-size: 0.9rem; }
+}
 </style>
 	</head>
 	<body>
+		<div id="waiting-overlay">
+			<div class="wo-bg"></div>
+			<div class="wo-dim"></div>
+			<div class="wo-content">
+				<div class="wo-spinner"></div>
+				<div class="wo-arena" id="woArena"></div>
+				<div class="wo-status">Waiting for opponent<span class="wo-dots"></span></div>
+				<div class="wo-sub" id="woSub">The battle will begin when another player joins</div>
+				<a class="wo-back" href="/">Back to Lobby</a>
+			</div>
+		</div>
+
 		<canvas id="canvas">
 			Your browser does not support the canvas tag.
 		</canvas>
@@ -325,6 +430,7 @@ const engine = new Engine(GODOT_CONFIG);
 			},
 		}).then(() => {
 			setStatusMode('hidden');
+			window._godotReady = true;
 		}, displayFailureNotice);
 	}
 }());
@@ -350,6 +456,28 @@ const engine = new Engine(GODOT_CONFIG);
 	let collapsed = false;
 	let unreadCount = 0;
 
+	const urlParams = new URLSearchParams(window.location.search);
+	const lobbyId = urlParams.get("lobby");
+	const role = urlParams.get("role") || "player";
+	const woOverlay = document.getElementById("waiting-overlay");
+	const woArena = document.getElementById("woArena");
+	const woSub = document.getElementById("woSub");
+
+	if (lobbyId) {
+		woArena.textContent = lobbyId.replace("_", " ");
+	}
+	if (role === "spectator") {
+		document.querySelector(".wo-status").textContent = "Joining as spectator...";
+		woSub.textContent = "Loading the battle";
+	}
+
+	function hideWaitingOverlay() {
+		if (!woOverlay || woOverlay.classList.contains("hidden")) return;
+		woOverlay.classList.add("fade-out");
+		setTimeout(function() { woOverlay.classList.add("hidden"); }, 600);
+	}
+	window.hideWaitingOverlay = hideWaitingOverlay;
+
 	function chatConnect() {
 		chatWs = new WebSocket(wsUrl);
 		chatWs.onopen = function() {
@@ -361,6 +489,15 @@ const engine = new Engine(GODOT_CONFIG);
 			else if (msg.type === "chat_history" && msg.messages) {
 				for (const m of msg.messages) appendMsg(m, false);
 				scrollChat();
+			}
+			else if (msg.type === "game_start") {
+				hideWaitingOverlay();
+			}
+			else if (msg.type === "lobby_list" && msg.lobbies && lobbyId) {
+				const lobby = msg.lobbies.find(function(l) { return l.id === lobbyId; });
+				if (lobby && lobby.status === "playing") {
+					hideWaitingOverlay();
+				}
 			}
 		};
 		chatWs.onclose = function() { setTimeout(chatConnect, 4000); };

@@ -116,6 +116,8 @@ func _handle_message(text: String):
 			if pnum == 0:
 				is_spectator = true
 			player_num = pnum
+			if OS.has_feature("web"):
+				JavaScriptBridge.eval("if(window.hideWaitingOverlay)window.hideWaitingOverlay()")
 			emit_signal("game_started", pnum)
 
 		"spawn":
