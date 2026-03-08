@@ -181,6 +181,17 @@ body {
 	display: none;
 	margin-left: 6px;
 }
+@media (max-width: 600px) {
+	#chat-overlay {
+		width: calc(100% - 16px);
+		right: 8px;
+		bottom: 8px;
+		max-height: 280px;
+	}
+	#chat-messages-game { max-height: 160px; font-size: 0.72rem; }
+	#chat-input-bar input { font-size: 16px; padding: 10px 8px; }
+	#chat-input-bar button { padding: 10px 12px; }
+}
 </style>
 	</head>
 	<body>

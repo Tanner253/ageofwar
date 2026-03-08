@@ -45,6 +45,7 @@ function lobbySnapshot() {
     status: l.status,
     players: l.players.length,
     spectators: l.spectators.length,
+    playerNames: l.players.map((p) => p.playerName),
   }));
 }
 

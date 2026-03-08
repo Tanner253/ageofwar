@@ -2,378 +2,494 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Age of War — Multiplayer Arena</title>
+  <link rel="icon" type="image/png" href="age-of-war.icon.png" />
+  <link rel="apple-touch-icon" href="age-of-war.apple-touch-icon.png" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg-dark: #0f0a04;
-      --bg-card: #1a1208;
-      --bg-card-hover: #251a0c;
-      --bg-chat: #110c04;
+      --bg: #0c0804;
+      --bg-card: rgba(18, 12, 6, 0.92);
+      --bg-card-hover: rgba(30, 20, 10, 0.95);
       --gold: #ffd050;
-      --gold-dim: #c09030;
-      --orange: #c07020;
-      --text: #f0d080;
-      --text-muted: #806030;
+      --gold-dim: #b88a30;
+      --orange: #d4822a;
+      --orange-bright: #f09030;
+      --red: #c04030;
+      --red-glow: #ff5040;
+      --green: #40c070;
+      --green-dim: #2a7a48;
+      --yellow: #e0b840;
+      --text: #e8d0a0;
+      --text-dim: #8a6a40;
       --border: #3a2510;
-      --border-hover: #8a5020;
-      --status-open: #40e0a0;
-      --status-waiting: #ffc040;
-      --status-playing: #e06040;
-      --radius: 10px;
+      --radius: 8px;
     }
 
+    html { height: 100%; }
     body {
-      background: var(--bg-dark);
+      background: var(--bg);
       color: var(--text);
-      font-family: Georgia, "Times New Roman", serif;
-      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100%;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
 
-    /* ── Header ──────────────────────────────────────────── */
+    /* ── Background ───────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 0%, rgba(180, 100, 20, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(120, 60, 10, 0.06) 0%, transparent 60%),
+        linear-gradient(180deg, #120a04 0%, #0c0804 40%, #0a0604 100%);
+      z-index: -1;
+    }
+
+    /* ── Header ───────────────────────────────────────────── */
     .header {
       text-align: center;
-      padding: 28px 20px 20px;
-      background: linear-gradient(180deg, #2a1808 0%, var(--bg-dark) 100%);
-      border-bottom: 1px solid var(--border);
+      padding: 24px 16px 18px;
+      background: linear-gradient(180deg, rgba(30, 16, 4, 0.95) 0%, transparent 100%);
+      border-bottom: 1px solid rgba(90, 50, 10, 0.3);
       position: relative;
     }
     .header h1 {
-      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(1.8rem, 4.5vw, 2.8rem);
       color: var(--gold);
-      text-shadow: 0 0 30px rgba(255, 128, 0, 0.4), 2px 2px 0 #5a2000;
-      letter-spacing: 6px;
+      text-shadow: 0 0 40px rgba(255, 160, 40, 0.25), 0 2px 0 #4a1800;
+      letter-spacing: 5px;
+      font-weight: 700;
     }
-    .header .subtitle {
-      font-size: 1rem;
+    .header .sub {
+      font-size: 0.75rem;
       color: var(--gold-dim);
-      letter-spacing: 3px;
-      margin-top: 4px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 2px;
+      font-weight: 600;
     }
-    .header-meta {
+    .hdr-status {
       position: absolute;
-      right: 24px;
+      right: 16px;
       top: 50%;
       transform: translateY(-50%);
       display: flex;
       align-items: center;
-      gap: 16px;
-      font-size: 0.85rem;
-    }
-    .online-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--status-open);
-      font-weight: bold;
-    }
-    .online-dot {
-      width: 8px; height: 8px;
-      background: var(--status-open);
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    .connection-status {
-      color: var(--text-muted);
+      gap: 12px;
       font-size: 0.8rem;
     }
+    .online-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(40, 180, 100, 0.12);
+      border: 1px solid rgba(40, 180, 100, 0.25);
+      padding: 4px 10px;
+      border-radius: 20px;
+      color: var(--green);
+      font-weight: 600;
+      font-size: 0.78rem;
+    }
+    .online-dot {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    #connStatus {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+    }
 
-    /* ── Main layout ─────────────────────────────────────── */
+    /* ── Layout ───────────────────────────────────────────── */
     .main {
       flex: 1;
       display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 0;
-      max-width: 1200px;
+      grid-template-columns: 1fr 300px;
+      gap: 20px;
+      max-width: 1100px;
       width: 100%;
       margin: 0 auto;
-      padding: 24px;
+      padding: 20px 16px;
     }
 
-    /* ── Arenas ───────────────────────────────────────────── */
-    .arenas-section { padding-right: 24px; }
-    .section-title {
-      font-size: 1.1rem;
-      color: var(--gold-dim);
-      letter-spacing: 2px;
-      margin-bottom: 16px;
+    /* ── Section titles ───────────────────────────────────── */
+    .sec-title {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 3px;
       text-transform: uppercase;
+      margin-bottom: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+    .sec-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(90, 50, 10, 0.4), transparent);
+    }
+
+    /* ── Arena cards ──────────────────────────────────────── */
     .arenas {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 12px;
     }
-    .arena-card {
-      background: linear-gradient(160deg, var(--bg-card) 0%, #140e06 100%);
+    .arena {
+      background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 20px 16px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-      cursor: default;
+      gap: 8px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
     }
-    .arena-card:hover {
-      border-color: var(--border-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    .arena:hover {
+      border-color: rgba(180, 100, 30, 0.4);
+      background: var(--bg-card-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    }
+    .arena-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
     .arena-name {
-      font-size: 1.15rem;
-      font-weight: bold;
+      font-family: Georgia, serif;
+      font-size: 1rem;
+      font-weight: 700;
       color: var(--gold);
     }
-    .arena-badge {
-      font-size: 0.75rem;
-      padding: 3px 12px;
-      border-radius: 20px;
-      font-weight: bold;
+
+    /* Status badges */
+    .badge {
+      font-size: 0.6rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
       letter-spacing: 1.5px;
       text-transform: uppercase;
     }
-    .badge-empty   { background: #1a2a20; color: var(--status-open); border: 1px solid #2a4a30; }
-    .badge-waiting { background: #2a2410; color: var(--status-waiting); border: 1px solid #4a3a10; animation: pulse 2s infinite; }
-    .badge-playing { background: #2a1414; color: var(--status-playing); border: 1px solid #4a2020; }
-
-    .arena-players {
-      font-size: 0.85rem;
-      color: var(--text-muted);
+    .badge-open { background: rgba(40, 180, 100, 0.12); color: var(--green); border: 1px solid rgba(40, 180, 100, 0.3); }
+    .badge-waiting { background: rgba(224, 184, 64, 0.12); color: var(--yellow); border: 1px solid rgba(224, 184, 64, 0.3); animation: blink 2s infinite; }
+    .badge-live {
+      background: rgba(255, 60, 40, 0.15);
+      color: var(--red-glow);
+      border: 1px solid rgba(255, 60, 40, 0.35);
+      position: relative;
+      padding-left: 16px;
     }
-    .arena-players strong { color: var(--text); }
+    .badge-live::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 5px; height: 5px;
+      background: var(--red-glow);
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+
+    /* Arena info */
+    .arena-info {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+    .arena-info strong { color: var(--text); }
+    .arena-versus {
+      font-size: 0.82rem;
+      color: var(--orange);
+      font-weight: 600;
+      text-align: center;
+      padding: 6px 0;
+      border-top: 1px solid rgba(90, 50, 10, 0.2);
+      border-bottom: 1px solid rgba(90, 50, 10, 0.2);
+    }
+    .arena-versus .vs { color: var(--red); font-weight: 800; margin: 0 4px; }
     .arena-spectators {
-      font-size: 0.75rem;
-      color: var(--text-muted);
+      font-size: 0.7rem;
+      color: var(--text-dim);
     }
 
-    .btn-row { display: flex; gap: 8px; margin-top: 4px; }
-    button {
-      padding: 7px 18px;
+    /* Arena buttons */
+    .arena-btns { display: flex; gap: 6px; margin-top: auto; }
+    .btn {
+      flex: 1;
+      padding: 8px 0;
       border: none;
       border-radius: 6px;
-      font-size: 0.85rem;
-      font-family: Georgia, serif;
+      font-size: 0.78rem;
+      font-weight: 700;
       cursor: pointer;
-      font-weight: bold;
-      letter-spacing: 1px;
-      transition: filter 0.15s, transform 0.1s;
+      letter-spacing: 0.5px;
+      transition: all 0.15s;
+      font-family: inherit;
+      text-transform: uppercase;
     }
-    button:hover:not(:disabled) { filter: brightness(1.2); transform: translateY(-1px); }
-    button:active:not(:disabled) { transform: translateY(0); }
-    button:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn:active:not(:disabled) { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-    .btn-play { background: linear-gradient(135deg, #c07020, #e08830); color: #fff8e0; }
-    .btn-spectate { background: linear-gradient(135deg, #2a3a4a, #3a4a5a); color: #a0c0e0; }
+    .btn-play {
+      background: linear-gradient(135deg, #c07020, #e09030);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(192, 112, 32, 0.3);
+    }
+    .btn-play:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(192, 112, 32, 0.5); }
 
-    /* ── Chat panel ───────────────────────────────────────── */
-    .chat-section {
+    .btn-watch {
+      background: rgba(200, 60, 40, 0.15);
+      color: var(--red-glow);
+      border: 1px solid rgba(200, 60, 40, 0.3);
+    }
+    .btn-watch:hover:not(:disabled) {
+      background: rgba(200, 60, 40, 0.25);
+      box-shadow: 0 4px 16px rgba(200, 60, 40, 0.3);
+    }
+    .btn-watch.pulse { animation: watchPulse 2s infinite; }
+    @keyframes watchPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 60, 40, 0); }
+      50% { box-shadow: 0 0 12px 2px rgba(255, 60, 40, 0.2); }
+    }
+
+    /* ── Chat panel ──────────────────────────────────────── */
+    .chat-col {
       display: flex;
       flex-direction: column;
-      border-left: 1px solid var(--border);
-      padding-left: 24px;
       min-height: 0;
     }
     .chat-box {
       flex: 1;
-      background: var(--bg-chat);
+      background: rgba(10, 6, 2, 0.9);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      min-height: 400px;
-      max-height: 65vh;
+      min-height: 380px;
+      max-height: 60vh;
     }
-    .chat-messages {
+    .chat-msgs {
       flex: 1;
       overflow-y: auto;
-      padding: 12px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      font-size: 0.85rem;
+      gap: 4px;
+      font-size: 0.8rem;
       scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
+      scrollbar-color: rgba(90, 50, 10, 0.3) transparent;
     }
-    .chat-msg { line-height: 1.4; animation: fadeIn 0.2s ease; }
-    .chat-msg .name { font-weight: bold; color: var(--orange); }
-    .chat-msg .text { color: var(--text); }
-    .chat-msg.system { color: var(--text-muted); font-style: italic; font-size: 0.8rem; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .msg { line-height: 1.4; animation: fadeUp 0.15s ease; }
+    .msg .n { font-weight: 700; color: var(--orange); }
+    .msg .t { color: var(--text); }
+    .msg.sys { color: var(--text-dim); font-style: italic; font-size: 0.74rem; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(3px); } }
 
-    .chat-input-row {
+    .chat-input {
       display: flex;
       border-top: 1px solid var(--border);
-      background: #0d0804;
+      background: rgba(8, 4, 2, 0.95);
     }
-    .chat-input-row input {
+    .chat-input input {
       flex: 1;
       background: transparent;
       border: none;
       color: var(--text);
-      font-family: Georgia, serif;
-      font-size: 0.85rem;
-      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 10px;
       outline: none;
     }
-    .chat-input-row input::placeholder { color: var(--text-muted); }
-    .chat-input-row button {
+    .chat-input input::placeholder { color: var(--text-dim); }
+    .chat-input button {
       background: var(--orange);
       color: #fff;
+      border: none;
       border-radius: 0;
-      padding: 10px 16px;
-      font-size: 0.8rem;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
     }
+    .chat-input button:hover { background: var(--orange-bright); }
 
-    /* ── Name bar ─────────────────────────────────────────── */
-    .name-bar {
+    .name-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-top: 12px;
-      font-size: 0.85rem;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 0.8rem;
     }
-    .name-bar label { color: var(--text-muted); white-space: nowrap; }
-    .name-bar input {
+    .name-row label { color: var(--text-dim); white-space: nowrap; font-size: 0.75rem; }
+    .name-row input {
       flex: 1;
-      background: var(--bg-chat);
+      background: rgba(10, 6, 2, 0.9);
       border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--gold);
-      font-family: Georgia, serif;
-      font-size: 0.85rem;
-      padding: 6px 10px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 6px 8px;
       outline: none;
     }
-    .name-bar input:focus { border-color: var(--orange); }
-    .name-bar button {
-      padding: 6px 12px;
-      font-size: 0.8rem;
+    .name-row input:focus { border-color: var(--orange); }
+    .name-row button {
+      padding: 6px 10px;
+      font-size: 0.72rem;
       background: var(--border);
       color: var(--text);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: inherit;
     }
 
-    /* ── Footer ───────────────────────────────────────────── */
+    /* ── Footer ──────────────────────────────────────────── */
     .footer {
       text-align: center;
-      padding: 16px 20px;
-      border-top: 1px solid var(--border);
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      line-height: 1.6;
+      padding: 14px;
+      border-top: 1px solid rgba(90, 50, 10, 0.2);
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      line-height: 1.5;
     }
     .footer a { color: var(--gold-dim); text-decoration: none; }
     .footer a:hover { color: var(--gold); }
 
-    /* ── Name modal ──────────────────────────────────────── */
-    .modal-overlay {
+    /* ── Name modal ─────────────────────────────────────── */
+    .modal-bg {
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0, 0, 0, 0.88);
       display: flex; align-items: center; justify-content: center;
-      z-index: 100;
+      z-index: 200;
     }
-    .modal-overlay.hidden { display: none; }
+    .modal-bg.hidden { display: none; }
     .modal {
-      background: linear-gradient(160deg, #2a1a08, #1a1004);
-      border: 2px solid var(--gold-dim);
+      background: linear-gradient(160deg, #1e1208, #140c04);
+      border: 1px solid var(--gold-dim);
       border-radius: 12px;
-      padding: 32px;
+      padding: 28px 24px;
       text-align: center;
-      max-width: 380px;
+      max-width: 340px;
       width: 90%;
     }
-    .modal h2 { color: var(--gold); font-size: 1.4rem; margin-bottom: 8px; }
-    .modal p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+    .modal h2 {
+      font-family: Georgia, serif;
+      color: var(--gold);
+      font-size: 1.3rem;
+      margin-bottom: 6px;
+    }
+    .modal p { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 16px; }
     .modal input {
       width: 100%;
-      background: var(--bg-dark);
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--gold);
-      font-family: Georgia, serif;
-      font-size: 1.1rem;
-      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 10px 12px;
       text-align: center;
       outline: none;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     .modal input:focus { border-color: var(--orange); }
     .modal button {
-      background: linear-gradient(135deg, #c07020, #e08830);
-      color: #fff8e0;
-      padding: 10px 32px;
-      font-size: 1rem;
+      background: linear-gradient(135deg, #c07020, #e09030);
+      color: #fff;
+      padding: 10px 28px;
+      font-size: 0.95rem;
       border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: inherit;
     }
 
-    /* ── Responsive ───────────────────────────────────────── */
-    @media (max-width: 800px) {
+    /* ── Mobile ──────────────────────────────────────────── */
+    @media (max-width: 768px) {
       .main {
         grid-template-columns: 1fr;
-        padding: 16px;
+        padding: 12px;
+        gap: 16px;
       }
-      .arenas-section { padding-right: 0; margin-bottom: 20px; }
-      .chat-section { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 20px; }
-      .header-meta { position: static; transform: none; justify-content: center; margin-top: 12px; }
-      .chat-box { min-height: 250px; max-height: 40vh; }
+      .hdr-status {
+        position: static;
+        transform: none;
+        justify-content: center;
+        margin-top: 10px;
+      }
+      .header { padding: 16px 12px 14px; }
+      .arenas { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .chat-col { border-top: 1px solid rgba(90, 50, 10, 0.2); padding-top: 16px; }
+      .chat-box { min-height: 250px; max-height: 35vh; }
+      .btn { padding: 10px 0; font-size: 0.82rem; }
+    }
+
+    @media (max-width: 420px) {
+      .arenas { grid-template-columns: 1fr; }
+      .header h1 { letter-spacing: 3px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Name modal on first visit -->
-  <div class="modal-overlay hidden" id="nameModal">
+  <!-- Name modal -->
+  <div class="modal-bg hidden" id="nameModal">
     <div class="modal">
       <h2>Enter the Arena</h2>
       <p>Choose your warrior name</p>
       <input type="text" id="modalNameInput" maxlength="20" placeholder="Your name..." autofocus />
-      <br />
-      <button onclick="saveName()">Enter</button>
+      <button onclick="saveName()">Enter Battle</button>
     </div>
   </div>
 
-  <!-- Header -->
   <header class="header">
     <h1>AGE OF WAR</h1>
-    <p class="subtitle">MULTIPLAYER ARENA</p>
-    <div class="header-meta">
-      <div class="online-badge">
+    <p class="sub">Multiplayer Arena</p>
+    <div class="hdr-status">
+      <div class="online-pill">
         <span class="online-dot"></span>
         <span id="onlineCount">--</span> online
       </div>
-      <span class="connection-status" id="connStatus">Connecting...</span>
+      <span id="connStatus">Connecting...</span>
     </div>
   </header>
 
-  <!-- Main -->
   <main class="main">
-    <!-- Left: Arenas -->
-    <section class="arenas-section">
-      <div class="section-title">Battle Arenas</div>
+    <section>
+      <div class="sec-title">Battle Arenas</div>
       <div class="arenas" id="arenas"></div>
     </section>
 
-    <!-- Right: Chat -->
-    <section class="chat-section">
-      <div class="section-title">Global Chat</div>
+    <section class="chat-col">
+      <div class="sec-title">Global Chat</div>
       <div class="chat-box">
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input-row">
+        <div class="chat-msgs" id="chatMessages"></div>
+        <div class="chat-input">
           <input type="text" id="chatInput" placeholder="Type a message..." maxlength="300" />
           <button onclick="sendChat()">Send</button>
         </div>
       </div>
-      <div class="name-bar">
+      <div class="name-row">
         <label>Name:</label>
         <input type="text" id="nameInput" maxlength="20" />
         <button onclick="updateName()">Save</button>
@@ -381,90 +497,69 @@
     </section>
   </main>
 
-  <!-- Footer -->
   <footer class="footer">
-    Choose an arena and challenge a friend. Share this link to play together!
-    <br />
-    Powered by <a href="https://github.com/Tanner253/ageofwar" target="_blank">Age of War</a>
-    &mdash; a recreation of the classic Flash game.
+    Share this link to battle friends &mdash;
+    <a href="https://github.com/Tanner253/ageofwar" target="_blank">Age of War</a>,
+    a recreation of the classic Flash game.
   </footer>
 
   <script src="config.js"></script>
   <script>
-    /* ── State ─────────────────────────────────────────── */
     let ws = null;
     let playerName = localStorage.getItem("aow_name") || "";
     let reconnectTimer = null;
 
-    /* ── Name modal ───────────────────────────────────── */
     if (!playerName) {
       document.getElementById("nameModal").classList.remove("hidden");
-      document.getElementById("modalNameInput").focus();
-      document.getElementById("modalNameInput").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") saveName();
-      });
+      const mi = document.getElementById("modalNameInput");
+      mi.focus();
+      mi.addEventListener("keydown", (e) => { if (e.key === "Enter") saveName(); });
     } else {
       document.getElementById("nameInput").value = playerName;
     }
 
     function saveName() {
-      const input = document.getElementById("modalNameInput");
-      const name = input.value.trim();
-      if (!name) { input.focus(); return; }
-      playerName = name;
+      const v = document.getElementById("modalNameInput").value.trim();
+      if (!v) { document.getElementById("modalNameInput").focus(); return; }
+      playerName = v;
       localStorage.setItem("aow_name", playerName);
       document.getElementById("nameInput").value = playerName;
       document.getElementById("nameModal").classList.add("hidden");
-      if (ws && ws.readyState === WebSocket.OPEN) {
+      if (ws && ws.readyState === WebSocket.OPEN)
         ws.send(JSON.stringify({ type: "set_name", name: playerName }));
-      }
     }
 
     function updateName() {
-      const name = document.getElementById("nameInput").value.trim();
-      if (!name) return;
-      playerName = name;
+      const v = document.getElementById("nameInput").value.trim();
+      if (!v) return;
+      playerName = v;
       localStorage.setItem("aow_name", playerName);
-      if (ws && ws.readyState === WebSocket.OPEN) {
+      if (ws && ws.readyState === WebSocket.OPEN)
         ws.send(JSON.stringify({ type: "set_name", name: playerName }));
-      }
     }
 
-    /* ── WebSocket ─────────────────────────────────────── */
     function connect() {
       const url = window.GAME_CONFIG.WS_URL;
       ws = new WebSocket(url);
 
       ws.onopen = () => {
         document.getElementById("connStatus").textContent = "Connected";
-        document.getElementById("connStatus").style.color = "#40e0a0";
-        if (playerName) {
-          ws.send(JSON.stringify({ type: "set_name", name: playerName }));
-        }
+        document.getElementById("connStatus").style.color = "#40c070";
+        if (playerName) ws.send(JSON.stringify({ type: "set_name", name: playerName }));
         ws.send(JSON.stringify({ type: "get_lobbies" }));
       };
 
       ws.onmessage = (e) => {
         const msg = JSON.parse(e.data);
-        switch (msg.type) {
-          case "lobby_list":
-            renderLobbies(msg.lobbies);
-            break;
-          case "chat":
-            appendChat(msg);
-            break;
-          case "chat_history":
-            renderChatHistory(msg.messages);
-            break;
-          case "online_count":
-            document.getElementById("onlineCount").textContent = msg.count;
-            break;
-        }
+        if (msg.type === "lobby_list") renderLobbies(msg.lobbies);
+        else if (msg.type === "chat") appendChat(msg);
+        else if (msg.type === "chat_history") renderHistory(msg.messages);
+        else if (msg.type === "online_count") document.getElementById("onlineCount").textContent = msg.count;
       };
 
       ws.onclose = () => {
-        document.getElementById("connStatus").textContent = "Disconnected — reconnecting...";
-        document.getElementById("connStatus").style.color = "#e06040";
+        document.getElementById("connStatus").textContent = "Reconnecting...";
+        document.getElementById("connStatus").style.color = "#c04030";
         reconnectTimer = setTimeout(connect, 3000);
       };
 
@@ -472,67 +567,82 @@
     }
 
     connect();
-
-    // Refresh lobbies periodically
     setInterval(() => {
-      if (ws && ws.readyState === WebSocket.OPEN) {
+      if (ws && ws.readyState === WebSocket.OPEN)
         ws.send(JSON.stringify({ type: "get_lobbies" }));
-      }
-    }, 4000);
+    }, 3000);
 
-    /* ── Lobby rendering ──────────────────────────────── */
     function renderLobbies(lobbies) {
       const el = document.getElementById("arenas");
       el.innerHTML = "";
-      for (const lobby of lobbies) {
-        const statusMap = { empty: "OPEN", waiting: "WAITING", playing: "IN BATTLE" };
-        const badgeClass = { empty: "badge-empty", waiting: "badge-waiting", playing: "badge-playing" };
-        const canPlay = lobby.status !== "playing";
-        const canWatch = lobby.status === "playing";
+      for (const l of lobbies) {
+        const isLive = l.status === "playing";
+        const isWaiting = l.status === "waiting";
+        const isEmpty = l.status === "empty";
+
+        let badgeHtml, badgeCls;
+        if (isLive) { badgeHtml = "LIVE"; badgeCls = "badge-live"; }
+        else if (isWaiting) { badgeHtml = "WAITING"; badgeCls = "badge-waiting"; }
+        else { badgeHtml = "OPEN"; badgeCls = "badge-open"; }
+
+        let mid = "";
+        if (isLive && l.playerNames && l.playerNames.length === 2) {
+          mid = `<div class="arena-versus">${esc(l.playerNames[0])} <span class="vs">VS</span> ${esc(l.playerNames[1])}</div>`;
+        } else if (isWaiting && l.playerNames && l.playerNames.length === 1) {
+          mid = `<div class="arena-info">${esc(l.playerNames[0])} is waiting...</div>`;
+        }
+
+        const specLine = l.spectators > 0
+          ? `<div class="arena-spectators">${l.spectators} watching</div>` : "";
 
         const card = document.createElement("div");
-        card.className = "arena-card";
+        card.className = "arena";
         card.innerHTML = `
-          <div class="arena-name">${lobby.name}</div>
-          <span class="arena-badge ${badgeClass[lobby.status]}">${statusMap[lobby.status]}</span>
-          <div class="arena-players"><strong>${lobby.players}</strong> / 2 players</div>
-          ${lobby.spectators > 0 ? `<div class="arena-spectators">${lobby.spectators} spectating</div>` : ""}
-          <div class="btn-row">
-            <button class="btn-play" ${canPlay ? "" : "disabled"} onclick="joinLobby('${lobby.id}', 'player')">Play</button>
-            <button class="btn-spectate" ${canWatch ? "" : "disabled"} onclick="joinLobby('${lobby.id}', 'spectator')">Watch</button>
+          <div class="arena-top">
+            <span class="arena-name">${l.name}</span>
+            <span class="badge ${badgeCls}">${badgeHtml}</span>
           </div>
-        `;
+          <div class="arena-info"><strong>${l.players}</strong> / 2 players</div>
+          ${mid}
+          ${specLine}
+          <div class="arena-btns">
+            <button class="btn btn-play" ${isLive ? "disabled" : ""} onclick="joinLobby('${l.id}','player')">
+              ${isWaiting ? "Join" : "Play"}
+            </button>
+            <button class="btn btn-watch ${isLive ? "pulse" : ""}" ${isLive ? "" : "disabled"} onclick="joinLobby('${l.id}','spectator')">
+              ${isLive ? "Watch Live" : "Watch"}
+            </button>
+          </div>`;
         el.appendChild(card);
       }
     }
 
-    function joinLobby(lobbyId, role) {
-      const serverParam = window.GAME_CONFIG.SERVER_URL
+    function joinLobby(id, role) {
+      const sp = window.GAME_CONFIG.SERVER_URL
         ? "&server=" + encodeURIComponent(window.GAME_CONFIG.WS_URL)
         : "";
-      const nameParam = playerName ? "&name=" + encodeURIComponent(playerName) : "";
-      window.location.href = `/game.html?lobby=${lobbyId}&role=${role}${serverParam}${nameParam}`;
+      const np = playerName ? "&name=" + encodeURIComponent(playerName) : "";
+      window.location.href = `/game.html?lobby=${id}&role=${role}${sp}${np}`;
     }
 
-    /* ── Chat ──────────────────────────────────────────── */
-    function renderChatHistory(messages) {
+    function renderHistory(messages) {
       const el = document.getElementById("chatMessages");
       el.innerHTML = "";
       if (!messages) return;
-      for (const msg of messages) appendChat(msg, false);
+      for (const m of messages) appendChat(m, false);
       el.scrollTop = el.scrollHeight;
     }
 
     function appendChat(msg, scroll = true) {
       const el = document.getElementById("chatMessages");
-      const div = document.createElement("div");
-      div.className = "chat-msg" + (msg.system ? " system" : "");
+      const d = document.createElement("div");
+      d.className = "msg" + (msg.system ? " sys" : "");
       if (msg.system) {
-        div.textContent = msg.message;
+        d.textContent = msg.message;
       } else {
-        div.innerHTML = `<span class="name">${escHtml(msg.name)}:</span> <span class="text">${escHtml(msg.message)}</span>`;
+        d.innerHTML = `<span class="n">${esc(msg.name)}:</span> <span class="t">${esc(msg.message)}</span>`;
       }
-      el.appendChild(div);
+      el.appendChild(d);
       if (el.children.length > 200) el.removeChild(el.firstChild);
       if (scroll) el.scrollTop = el.scrollHeight;
     }
@@ -549,7 +659,7 @@
       if (e.key === "Enter") sendChat();
     });
 
-    function escHtml(s) {
+    function esc(s) {
       const d = document.createElement("div");
       d.textContent = s;
       return d.innerHTML;
