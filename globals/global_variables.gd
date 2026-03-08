@@ -14,6 +14,10 @@ var current_stage
 enum difficulty {normal, hard, impossible}
 var current_difficulty
 
+# Multiplayer flags (set by MultiplayerManager before game starts)
+var is_player_two  : bool = false  # true when this client is Player 2 (right side)
+var is_multiplayer : bool = false  # true in any networked game (player or spectator)
+
 func _ready():
 	load_config()
 	

@@ -141,12 +141,18 @@ func take_damage(damage):
 	$PanelContainer/current_health.custom_minimum_size.y = 250 * health/max_health
 	$Label.text = str(health)
 	if health <= 0:
-		if is_player_owned == true:
-			MusicManager.audioStreamPlayer.stop()
-			get_tree().change_scene_to_file("res://scenes/game_over.tscn")
-		elif is_player_owned == false:
-			MusicManager.audioStreamPlayer.stop()
+		MusicManager.audioStreamPlayer.stop()
+		# is_player_owned == is_player_two → this base belongs to the enemy → player wins
+		# P1 (is_player_two=false): win when is_player_owned=false base dies  → false==false ✓
+		# P2 (is_player_two=true):  win when is_player_owned=true  base dies  → true==true  ✓
+		var player_wins = (is_player_owned == GlobalVariables.is_player_two)
+		if GlobalVariables.is_multiplayer:
+			var winner_num = MultiplayerManager.player_num if player_wins else (3 - MultiplayerManager.player_num)
+			MultiplayerManager.send_game_over(winner_num)
+		if player_wins:
 			get_tree().change_scene_to_file("res://scenes/win_screen.tscn")
+		else:
+			get_tree().change_scene_to_file("res://scenes/game_over.tscn")
 
 func get_number_of_turret_slots():
 	var number = 0

@@ -84,10 +84,11 @@ func _ready():
 		melee_ray_cast.set_collision_mask_value(4, true)
 		self.z_index = 2
 		
-	if is_player_owned == false and GlobalVariables.current_difficulty == GlobalVariables.difficulty.hard:
-		health *= 1.25
-	elif is_player_owned == false and GlobalVariables.current_difficulty == GlobalVariables.difficulty.impossible:
-		health *= 1.5
+	if not GlobalVariables.is_multiplayer:
+		if is_player_owned == false and GlobalVariables.current_difficulty == GlobalVariables.difficulty.hard:
+			health *= 1.25
+		elif is_player_owned == false and GlobalVariables.current_difficulty == GlobalVariables.difficulty.impossible:
+			health *= 1.5
 		
 	max_health = health
 	starting_health_bar_size = $Control/health_bar.size.x
@@ -119,12 +120,12 @@ func _process(delta):
 		die_sfx.stream = load("res://age of war sprites/audio/sfx/die_0" + str(randi_range(1,5)) + ".mp3")
 		die_sfx.play()
 		
-		if is_player_owned == false:
+		if is_player_owned == GlobalVariables.is_player_two:
 			GlobalVariables.player_money += money_die_reward
 			GlobalVariables.player_exp += 2 * money_die_reward
 			spawn_show_death_money()
 		else:
-			GlobalVariables.player_exp += int (money_die_reward/2)
+			GlobalVariables.player_exp += int(money_die_reward / 2)
 	
 	position.y = 570
 	$Label.text = str(health)

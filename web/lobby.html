@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Age of War — Multiplayer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1208;
+      color: #f0d080;
+      font-family: Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      background-image: radial-gradient(ellipse at 50% 0%, #3a2510 0%, #1a1208 60%);
+    }
+
+    h1 {
+      font-size: 3rem;
+      color: #ffd050;
+      text-shadow: 0 0 20px #ff8000, 2px 2px 0 #5a2000;
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: #c09040;
+      margin-bottom: 40px;
+      letter-spacing: 2px;
+    }
+
+    .arenas {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1100px;
+      margin-bottom: 40px;
+    }
+
+    .arena-card {
+      background: linear-gradient(160deg, #2e1a08 0%, #1e1004 100%);
+      border: 2px solid #6a4010;
+      border-radius: 8px;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .arena-card:hover { border-color: #c08030; }
+
+    .arena-name {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ffd050;
+      text-align: center;
+    }
+
+    .arena-status {
+      font-size: 0.9rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .status-empty    { background: #333; color: #888; }
+    .status-waiting  { background: #2a4020; color: #80e040; }
+    .status-playing  { background: #402020; color: #e06040; }
+
+    .arena-info { font-size: 0.85rem; color: #a08050; text-align: center; }
+
+    .btn-row { display: flex; gap: 8px; }
+
+    button {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      font-family: Georgia, serif;
+      cursor: pointer;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: filter 0.15s;
+    }
+    button:hover { filter: brightness(1.2); }
+    button:disabled { filter: brightness(0.5); cursor: not-allowed; }
+
+    .btn-play    { background: #c07020; color: #fff8e0; }
+    .btn-spectate { background: #304050; color: #a0c0e0; }
+
+    .refresh-row {
+      color: #806030;
+      font-size: 0.8rem;
+      margin-bottom: 20px;
+    }
+
+    .tip {
+      max-width: 700px;
+      text-align: center;
+      color: #806030;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <h1>AGE OF WAR</h1>
+  <p class="subtitle">MULTIPLAYER PVP</p>
+
+  <div class="arenas" id="arenas">
+    <!-- populated by JS -->
+  </div>
+
+  <p class="refresh-row" id="refreshMsg">Connecting to server…</p>
+
+  <p class="tip">
+    Choose an empty arena to start a game. Share the arena name with a friend so they can join you.
+    Watch ongoing battles as a spectator while you wait for an open slot.
+  </p>
+
+  <script>
+    const wsProto = location.protocol === "https:" ? "wss://" : "ws://";
+    const ws = new WebSocket(wsProto + location.host);
+    let lastUpdate = null;
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: "get_lobbies" }));
+    };
+
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === "lobby_list") {
+        renderLobbies(msg.lobbies);
+        lastUpdate = new Date();
+        document.getElementById("refreshMsg").textContent =
+          "Updated " + lastUpdate.toLocaleTimeString();
+      }
+    };
+
+    ws.onclose = () => {
+      document.getElementById("refreshMsg").textContent = "Disconnected — refresh the page.";
+    };
+
+    // Poll every 3 seconds
+    setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "get_lobbies" }));
+      }
+    }, 3000);
+
+    function renderLobbies(lobbies) {
+      const container = document.getElementById("arenas");
+      container.innerHTML = "";
+      for (const lobby of lobbies) {
+        const card = document.createElement("div");
+        card.className = "arena-card";
+
+        const statusLabel = { empty: "OPEN", waiting: "WAITING", playing: "IN PROGRESS" }[lobby.status] || lobby.status.toUpperCase();
+        const statusClass = "status-" + lobby.status;
+
+        const spectateCount = lobby.spectators ? ` · ${lobby.spectators} watching` : "";
+        const info =
+          lobby.status === "empty"    ? "No players yet" :
+          lobby.status === "waiting"  ? "1 player waiting for opponent" :
+          `Battle in progress${spectateCount}`;
+
+        const canPlay    = lobby.status !== "playing";
+        const canSpectate = lobby.status === "playing";
+
+        card.innerHTML = `
+          <div class="arena-name">${lobby.name}</div>
+          <span class="arena-status ${statusClass}">${statusLabel}</span>
+          <div class="arena-info">${info}</div>
+          <div class="btn-row">
+            <button class="btn-play"
+              ${canPlay ? "" : "disabled"}
+              onclick="joinLobby('${lobby.id}', 'player')">
+              ⚔ Play
+            </button>
+            <button class="btn-spectate"
+              ${canSpectate ? "" : "disabled"}
+              onclick="joinLobby('${lobby.id}', 'spectator')">
+              👁 Watch
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function joinLobby(lobbyId, role) {
+      // Navigate to the Godot game with lobby info in URL params
+      window.location.href = `/index.html?lobby=${lobbyId}&role=${role}`;
+    }
+  </script>
+</body>
+</html>

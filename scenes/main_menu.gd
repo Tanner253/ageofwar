@@ -1,5 +1,13 @@
 extends Control
 
+func _on_multiplayer_pressed():
+	# In the browser this redirects to the lobby page.
+	# In editor, navigate to the Godot lobby screen.
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.location.href = '/'")
+	else:
+		get_tree().change_scene_to_file("res://scenes/lobby.tscn")
+
 func _on_play_pressed():
 	GlobalVariables.current_stage = GlobalVariables.stage.cave
 	GlobalVariables.player_exp = 0

@@ -17,16 +17,20 @@ var unit_timer
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	self.global_position.y = 570
-	
+
+	# In multiplayer the AI is fully disabled by main_game.gd — do nothing
+	if MultiplayerManager.is_multiplayer_game:
+		return
+
 	unit_timer = get_node("unit_spawn_timer")
-	
+
 	current_age = "cave"
 	unit_timer.start(3.0)
 	enemy_units_container = get_node("/root/main_game/enemy_units")
 	$change_age_timer.wait_time = 180
 	$change_age_timer.start()
 	$turret_timer.start()
-	
+
 	$phase_timer.wait_time = first_phase_time
 	$phase_timer.start()
 

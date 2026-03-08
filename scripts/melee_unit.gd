@@ -82,10 +82,12 @@ func _ready():
 	else:
 		melee_ray_cast.set_collision_mask_value(4, true)
 		self.z_index = 2
-	if is_player_owned == false and GlobalVariables.current_difficulty == GlobalVariables.difficulty.hard:
-		health *= 1.25
-	elif is_player_owned == false and GlobalVariables.current_difficulty == GlobalVariables.difficulty.impossible:
-		health *= 1.5
+	# Only apply difficulty modifiers in single-player mode
+	if not GlobalVariables.is_multiplayer:
+		if is_player_owned == false and GlobalVariables.current_difficulty == GlobalVariables.difficulty.hard:
+			health *= 1.25
+		elif is_player_owned == false and GlobalVariables.current_difficulty == GlobalVariables.difficulty.impossible:
+			health *= 1.5
 		
 	max_health = health
 	starting_health_bar_size = $Control/health_bar.size.x
@@ -115,12 +117,15 @@ func _process(delta):
 		die_sfx.play()
 	
 		
-		if is_player_owned == false:
+		# is_player_owned == is_player_two means "this is an enemy unit for the current client"
+		# P1 (is_player_two=false): enemy = is_player_owned false → false==false ✓
+		# P2 (is_player_two=true):  enemy = is_player_owned true  → true==true  ✓
+		if is_player_owned == GlobalVariables.is_player_two:
 			GlobalVariables.player_money += money_die_reward
 			GlobalVariables.player_exp += 2 * money_die_reward
 			spawn_show_death_money()
 		else:
-			GlobalVariables.player_exp += int (money_die_reward/2)
+			GlobalVariables.player_exp += int(money_die_reward / 2)
 
 	position.y = 570
 	$Label.text = str(health)
